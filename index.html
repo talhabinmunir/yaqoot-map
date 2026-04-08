@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yaqoot Real Estate | Investment Map</title>
+    <link rel="icon" type="image/png" href="https://i.ibb.co/RphSD0Fz/Yaqoot-brandmark.png">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: '#64090c',
+                        primary: '#9c0512',
+                        dark: '#0e0000',
+                        sand: '#efeacd',
+                        highlight: '#f8d794',
+                        surface: '#f5f5f0'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- HTML2Canvas for Screenshots -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap');
+
+        :root {
+            --map-rot: 0deg;
+        }
+
+        /* Typography & Theming */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            background-color: #f5f5f0;
+            color: #0e0000;
+            overflow: hidden;
+        }
+
+        :lang(en) { font-family: 'Montserrat', sans-serif; }
+        :lang(ar) { font-family: 'Arial', sans-serif; }
+
+        #map-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ------------------------------------- */
+        /* MAP CANVAS & ROTATION LOGIC           */
+        /* ------------------------------------- */
+        #map-wrapper {
+            position: absolute;
+            width: 200vmax;
+            height: 200vmax;
+            top: calc(50vh - 100vmax);
+            left: calc(50vw - 100vmax);
+            transform: rotate(var(--map-rot));
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: center center;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            background: #efeacd;
+        }
+
+        .leaflet-tile-pane {
+            filter: sepia(0.2) saturate(1.1) brightness(0.95);
+            transition: filter 0.5s ease;
+        }
+
+        /* ------------------------------------- */
+        /* UI OVERLAYS & CARDS                   */
+        /* ------------------------------------- */
+        .canvas-overlay {
+            position: absolute;
+            z-index: 2000;
+        }
+
+        .leaflet-bottom.leaflet-right, .leaflet-bottom.leaflet-left {
+            display: none; /* Hide default controls */
+        }
+
+        /* Card Container Styles */
+        .ui-card {
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+            height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+            border-radius 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+            transform 0.3s ease;
+            overflow: hidden;
+        }
+
+        /* Stage 1: Collapsed Body */
+        .collapsible-body {
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, padding 0.4s ease, border-color 0.4s ease;
+            max-height: 800px; /* arbitrary high number to allow natural content height */
+            opacity: 1;
+        }
+
+        .ui-card.is-collapsed .collapsible-body {
+            max-height: 0 !important;
+            opacity: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            border-color: transparent !important;
+            overflow: hidden;
+        }
+
+        /* Stage 2: Icon Only */
+        .ui-card.icon-only {
+            width: 48px !important;
+            min-width: 48px !important;
+            height: 48px !important;
+            min-height: 48px !important;
+            border-radius: 50% !important;
+            cursor: pointer;
+            border: 2px solid #efeacd;
+        }
+
+        .ui-card.icon-only:hover {
+            transform: scale(1.08);
+            border-color: #64090c;
+        }
+
+        .ui-card.icon-only .card-header {
+            height: 100%;
+            padding: 0 !important;
+            justify-content: center;
+            border: none;
+            background: transparent !important;
+        }
+
+        .ui-card.icon-only .card-header > div {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .ui-card.icon-only .card-title,
+        .ui-card.icon-only .card-chevron {
+            display: none !important;
+        }
+
+        .ui-card .brandmark-icon {
+            display: none;
+        }
+
+        .ui-card.icon-only .brandmark-icon {
+            display: block !important;
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+
+        /* ------------------------------------- */
+        /* MARKER ANIMATIONS & STYLES            */
+        /* ------------------------------------- */
+        .marker-rotator {
+            transform: rotate(calc(-1 * var(--map-rot)));
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .journey-marker {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 2px solid #f5f5f0;
+            box-shadow: 0 4px 15px rgba(14,0,0,0.3);
+            color: #f5f5f0;
+            z-index: 20;
+            position: relative;
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+
+        .journey-marker:hover {
+            transform: scale(1.15);
+        }
+
+        .marker-pulse {
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+            z-index: -1;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.8); opacity: 0; }
+        }
+
+        .flowing-path {
+            animation: dash-flow 30s linear infinite;
+            filter: drop-shadow(0px 2px 4px rgba(14,0,0,0.5));
+        }
+        .flowing-path-fast {
+            animation: dash-flow 15s linear infinite;
+            filter: drop-shadow(0px 2px 4px rgba(14,0,0,0.5));
+        }
+        @keyframes dash-flow {
+            to { stroke-dashoffset: -1000; }
+        }
+
+        /* Dynamic Map Labels */
+        .node-label {
+            transition: opacity 0.3s ease, visibility 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* Hides labels when zoomed out, shows on marker hover */
+        body.hide-labels .node-label {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        body.hide-labels .marker-rotator:hover .node-label {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Disable Animations Toggle */
+        body.disable-animations .marker-pulse {
+            display: none !important;
+            animation: none !important;
+        }
+
+        body.disable-animations .flowing-path,
+        body.disable-animations .flowing-path-fast {
+            animation: none !important;
+        }
+
+        /* UI Visibility Toggle */
+        body.ui-hidden #lang-toggle-btn,
+        body.ui-hidden .ui-card,
+        body.ui-hidden #custom-node-popup,
+        body.ui-hidden #other-controls {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+
+        #lang-toggle-btn, #other-controls {
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="map-container">
+
+    <!-- WRAPPER FOR ROTATION -->
+    <div id="map-wrapper">
+        <div id="map"></div>
+    </div>
+
+    <!-- LANGUAGE TOGGLE -->
+    <div id="lang-toggle-btn" class="canvas-overlay top-4 end-4 md:top-6 md:end-6 pointer-events-auto">
+        <button onclick="toggleLanguage()" class="bg-brand text-white hover:bg-dark px-3 py-1.5 md:px-4 md:py-2 rounded-lg shadow-lg transition-colors font-bold flex items-center gap-2 border border-brand/50 text-sm md:text-base">
+            <i data-lucide="globe" class="w-4 h-4 md:w-5 md:h-5"></i>
+            <span id="lang-toggle-text">عربي</span>
+        </button>
+    </div>
+
+    <!-- TITLE BLOCK -->
+    <div id="card-title" class="ui-card canvas-overlay top-4 start-4 md:top-6 md:start-6 w-72 md:w-96 max-w-[calc(100vw-2rem)] bg-surface/95 backdrop-blur-md border border-sand rounded-xl shadow-lg pointer-events-auto">
+        <div class="card-header p-3 md:p-4 flex justify-between items-center cursor-pointer select-none" onclick="toggleIconCard('card-title')">
+
+            <!-- Brandmark: Shows ONLY when card is collapsed into a circular icon -->
+            <img src="https://i.ibb.co/RphSD0Fz/Yaqoot-brandmark.png" alt="Yaqoot Icon" class="brandmark-icon drop-shadow-sm">
+
+            <!-- Full Logo & Title: Shows when expanded -->
+            <div class="card-title flex flex-col gap-1.5 md:gap-2">
+                <img src="https://i.ibb.co/Y7kgwmgn/Yaqoot-Logo.png" alt="Yaqoot Real Estate" class="h-8 md:h-12 object-contain object-left rtl:object-right">
+                <div class="flex items-center gap-1.5">
+                    <i data-lucide="map" class="text-highlight w-3.5 h-3.5 md:w-4 md:h-4 shrink-0"></i>
+                    <span class="font-black text-[10px] md:text-xs tracking-widest text-brand uppercase whitespace-nowrap opacity-80" data-i18n="title">Investment Map Explorer</span>
+                </div>
+            </div>
+
+            <i data-lucide="chevron-up" class="card-chevron text-brand w-5 h-5 transition-transform duration-300 ml-4 rtl:ml-0 rtl:mr-4"></i>
+        </div>
+
+        <div class="card-body collapsible-body px-3 pb-3 md:px-4 md:pb-4 border-t border-sand/50">
+            <div class="flex flex-wrap items-center gap-1.5 md:gap-2 text-[10px] md:text-xs font-semibold">
+                <span class="text-brand drop-shadow-sm" data-i18n="step1">Heritage</span>
+                <span class="text-dark/40 rtl:rotate-180 inline-block">→</span>
+                <span class="text-primary drop-shadow-sm" data-i18n="step2">Elevation</span>
+                <span class="text-dark/40 rtl:rotate-180 inline-block">→</span>
+                <span class="text-dark drop-shadow-sm" data-i18n="step3">Transformation</span>
+                <span class="text-dark/40 rtl:rotate-180 inline-block">→</span>
+                <span class="text-highlight drop-shadow-sm" data-i18n="step4">Expansion</span>
+                <span class="text-dark/40 rtl:rotate-180 inline-block">→</span>
+                <span class="text-dark font-bold bg-highlight/30 border border-highlight px-2 py-0.5 rounded-full mt-1 md:mt-0" data-i18n="step5">Opportunity</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- LEGEND OVERLAY -->
+    <div id="card-legend" class="ui-card canvas-overlay bottom-6 start-4 md:start-6 pointer-events-auto bg-surface/95 backdrop-blur-md border border-sand rounded-xl shadow-lg w-60 md:w-64">
+        <div class="card-header p-3 md:p-4 flex justify-between items-center cursor-pointer select-none" onclick="toggleIconCard('card-legend')">
+            <div class="card-title flex items-center gap-2">
+                <i data-lucide="list" class="w-4 h-4 md:w-5 md:h-5 text-primary shrink-0"></i>
+                <h3 class="text-brand font-bold text-xs md:text-sm uppercase tracking-wider m-0 whitespace-nowrap" data-i18n="legendTitle">Map Legend</h3>
+            </div>
+
+            <img src="https://i.ibb.co/RphSD0Fz/Yaqoot-brandmark.png" alt="Yaqoot Icon" class="brandmark-icon drop-shadow-sm">
+
+            <i data-lucide="chevron-up" class="card-chevron text-brand w-4 h-4 md:w-5 md:h-5 transition-transform duration-300"></i>
+        </div>
+
+        <div class="card-body collapsible-body px-3 pb-3 md:px-4 md:pb-4 border-t border-sand/50">
+            <div class="space-y-2.5 text-[10px] md:text-xs font-medium text-dark">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-3 h-3 rounded-full bg-brand border border-white/50 shadow-sm shrink-0"></div>
+                    <span data-i18n="legHeritage">Heritage & Premium Zones</span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <div class="w-3 h-3 rounded-full bg-primary border border-white/50 shadow-sm shrink-0"></div>
+                    <span data-i18n="legElevation">Geographical Elevation Drop</span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <div class="w-3 h-3 rounded-full bg-dark border border-white/50 shadow-sm shrink-0"></div>
+                    <span data-i18n="legTransform">Transformation & Giga-Projects</span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <div class="w-3 h-3 rounded-full bg-highlight border border-dark/20 shadow-sm shrink-0"></div>
+                    <span data-i18n="legExpansion">Expansion & Investment Lands</span>
+                </div>
+                <hr class="border-sand my-2">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-4 h-0 border-t-2 border-dashed border-primary opacity-80 shrink-0"></div>
+                    <span data-i18n="legRoute">Main Highway Route</span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <div class="w-4 h-0 border-t-[3px] border-dotted border-brand drop-shadow-sm shrink-0"></div>
+                    <span data-i18n="legMetro">Planned Metro Line 7</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- INFOGRAPHICS OVERLAY -->
+    <div id="card-insights" class="ui-card canvas-overlay top-20 end-4 md:top-20 md:end-6 pointer-events-auto bg-surface/95 backdrop-blur-md border border-sand rounded-xl shadow-lg w-60 md:w-72">
+        <div class="card-header bg-sand/30 p-2.5 md:p-3 border-b border-sand flex justify-between items-center cursor-pointer select-none" onclick="toggleIconCard('card-insights')">
+            <div class="card-title flex items-center gap-2">
+                <i data-lucide="bar-chart-2" class="w-4 h-4 md:w-5 md:h-5 text-brand shrink-0"></i>
+                <h3 class="text-brand font-bold text-xs md:text-sm uppercase tracking-wider m-0 whitespace-nowrap" data-i18n="insightsTitle">Market Insights</h3>
+            </div>
+
+            <img src="https://i.ibb.co/RphSD0Fz/Yaqoot-brandmark.png" alt="Yaqoot Icon" class="brandmark-icon drop-shadow-sm">
+
+            <i data-lucide="chevron-up" class="card-chevron text-brand w-4 h-4 md:w-5 md:h-5 transition-transform duration-300"></i>
+        </div>
+
+        <div class="card-body collapsible-body p-3 md:p-4 space-y-4">
+            <div>
+                <div class="text-dark/50 text-[9px] md:text-[10px] uppercase tracking-widest mb-1 font-bold" data-i18n="insScaleTitle">Scale of Transformation</div>
+                <div class="flex items-end gap-1.5">
+                    <span class="text-2xl md:text-3xl font-black text-brand leading-none drop-shadow-sm">360</span>
+                    <span class="text-[10px] md:text-xs text-primary font-semibold mb-0.5" data-i18n="km2">km²</span>
+                </div>
+                <div class="text-[9px] md:text-[10px] text-dark/70 mt-1 leading-relaxed" data-i18n="insScaleDesc">Qiddiya master area, serving as the capital of Entertainment with 400+ attractions.</div>
+            </div>
+
+            <div>
+                <div class="text-dark/50 text-[9px] md:text-[10px] uppercase tracking-widest mb-1 font-bold" data-i18n="insAccessTitle">Infrastructure Access</div>
+                <div class="flex items-end gap-1.5">
+                    <span class="text-2xl md:text-3xl font-black text-primary leading-none drop-shadow-sm">176</span>
+                    <span class="text-[10px] md:text-xs text-brand font-semibold mb-0.5" data-i18n="km">km</span>
+                </div>
+                <div class="text-[9px] md:text-[10px] text-dark/70 mt-1 leading-relaxed" data-i18n="insAccessDesc">Driverless Riyadh Metro network, connecting Diriyah directly toward West Riyadh.</div>
+            </div>
+
+            <div class="bg-sand/30 p-2.5 rounded-lg border border-brand/10 shadow-inner">
+                <div class="text-brand text-[9px] md:text-[10px] uppercase tracking-widest mb-2 font-bold flex items-center gap-1.5">
+                    <i data-lucide="trending-up" class="w-3 h-3 md:w-4 md:h-4"></i> <span data-i18n="insAppreciation">Value Appreciation</span>
+                </div>
+                <div class="flex justify-between items-center mb-1.5">
+                    <span class="text-[9px] md:text-[10px] text-dark/70 font-medium" data-i18n="insValOldTitle">2008 Base (Um Al-Khair)</span>
+                    <span class="text-[9px] md:text-[10px] text-dark/50 line-through" data-i18n="insValOld">10 SAR/m²</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-[9px] md:text-[10px] text-primary font-bold" data-i18n="insValNewTitle">Current Valuation</span>
+                    <span class="text-[10px] md:text-xs font-black text-dark bg-highlight border border-highlight/50 px-1.5 py-0.5 rounded shadow-sm" data-i18n="insValNew">~200 SAR/m²</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NODE DESCRIPTION POPUP (REPLACES LEAFLET POPUP) -->
+    <div id="custom-node-popup" class="canvas-overlay bottom-6 start-4 end-4 md:start-auto md:translate-x-0 md:end-24 md:bottom-12 md:w-80 max-h-[85vh] overflow-y-auto bg-surface/95 backdrop-blur-xl border-t-4 p-5 rounded-2xl shadow-[0_20px_40px_rgba(14,0,0,0.2)] pointer-events-auto transition-all duration-300 translate-y-10 opacity-0 pointer-events-none z-[2500]">
+        <!-- content injected dynamically -->
+    </div>
+
+    <!-- BOTTOM END CONTROLS -->
+    <div class="canvas-overlay bottom-6 end-4 md:end-6 pointer-events-auto flex flex-col gap-2 md:gap-3">
+
+        <!-- WRAPPER FOR HIDEABLE CONTROLS -->
+        <div id="other-controls" class="flex flex-col gap-2 md:gap-3">
+            <!-- ANIMATION TOUR -->
+            <button onclick="toggleTour()" class="bg-surface/90 backdrop-blur border border-sand text-dark p-2.5 md:p-3 rounded-full shadow-lg hover:bg-brand hover:text-white hover:scale-110 transition-all group flex items-center justify-center" title="Play Map Tour">
+                <i id="tour-icon" data-lucide="play" class="w-5 h-5 md:w-6 md:h-6 transition-colors"></i>
+            </button>
+
+            <!-- TOGGLE LABELS -->
+            <button onclick="toggleLabelsOverride()" class="bg-surface/90 backdrop-blur border border-sand text-dark p-2.5 md:p-3 rounded-full shadow-lg hover:bg-brand hover:text-white hover:scale-110 transition-all group flex items-center justify-center" title="Toggle Location Names">
+                <i id="labels-icon" data-lucide="tag" class="w-5 h-5 md:w-6 md:h-6 transition-colors"></i>
+            </button>
+
+            <!-- TOGGLE ANIMATIONS -->
+            <button onclick="toggleAnimations()" class="bg-surface/90 backdrop-blur border border-sand text-dark p-2.5 md:p-3 rounded-full shadow-lg hover:bg-brand hover:text-white hover:scale-110 transition-all group flex items-center justify-center" title="Toggle Map Animations">
+                <i id="anim-icon" data-lucide="zap" class="w-5 h-5 md:w-6 md:h-6 transition-colors"></i>
+            </button>
+
+            <!-- ROTATE MAP -->
+            <button onclick="rotateMap()" class="bg-surface/90 backdrop-blur border border-sand text-dark p-2.5 md:p-3 rounded-full shadow-lg hover:bg-brand hover:text-white hover:scale-110 transition-all group flex items-center justify-center" title="Rotate Map">
+                <i data-lucide="rotate-cw" class="w-5 h-5 md:w-6 md:h-6 transition-colors"></i>
+            </button>
+
+            <!-- MAP TYPE -->
+            <button onclick="toggleMapType()" class="bg-surface/90 backdrop-blur border border-sand text-dark p-2.5 md:p-3 rounded-full shadow-lg hover:bg-highlight hover:text-dark hover:scale-110 transition-all group flex items-center justify-center" title="Switch Map View">
+                <i id="map-type-icon" data-lucide="layers" class="w-5 h-5 md:w-6 md:h-6 transition-colors"></i>
+            </button>
+
+            <!-- RECENTER -->
+            <button onclick="recenterMap()" class="bg-surface/90 backdrop-blur border border-sand text-dark p-2.5 md:p-3 rounded-full shadow-lg hover:bg-brand hover:text-white hover:scale-110 transition-all group flex items-center justify-center" title="Recenter Map">
+                <i data-lucide="crosshair" class="w-5 h-5 md:w-6 md:h-6 transition-colors"></i>
+            </button>
+        </div>
+
+        <!-- SCREENSHOT BUTTON (Always visible) -->
+        <button onclick="takeScreenshot()" class="bg-surface/90 backdrop-blur border border-brand text-brand p-2.5 md:p-3 rounded-full shadow-lg hover:bg-brand hover:text-white hover:scale-110 transition-all group flex items-center justify-center" title="Take High-Res Screenshot">
+            <i id="screenshot-icon" data-lucide="camera" class="w-5 h-5 md:w-6 md:h-6 transition-colors"></i>
+        </button>
+
+        <!-- TOGGLE UI VISIBILITY (Always visible) -->
+        <button onclick="toggleUI()" class="bg-surface/90 backdrop-blur border border-brand text-brand p-2.5 md:p-3 rounded-full shadow-lg hover:bg-brand hover:text-white hover:scale-110 transition-all group flex items-center justify-center" title="Hide/Show UI">
+            <i id="ui-icon" data-lucide="eye-off" class="w-5 h-5 md:w-6 md:h-6 transition-colors"></i>
+        </button>
+
+    </div>
+
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- APPLICATION SCRIPT -->
+<script>
+    // ----------------------------------------------------------------
+    // 1. Language Setup
+    // ----------------------------------------------------------------
+    const dict = {
+        en: {
+            toggleText: 'عربي', title: 'Investment Map Explorer',
+            step1: 'Heritage', step2: 'Elevation', step3: 'Transformation', step4: 'Expansion', step5: 'Opportunity',
+            legendTitle: 'Map Legend', legHeritage: 'Heritage & Premium Zones', legElevation: 'Geographical Elevation Drop', legTransform: 'Transformation & Giga-Projects', legExpansion: 'Expansion & Investment Lands', legRoute: 'Main Highway Route', legMetro: 'Planned Metro Line 7',
+            insightsTitle: 'Market Insights', insScaleTitle: 'Scale of Transformation', insScaleDesc: 'Qiddiya master area, serving as the capital of Entertainment with 400+ attractions.', insAccessTitle: 'Infrastructure Access', insAccessDesc: 'Driverless Riyadh Metro network, connecting Diriyah directly toward West Riyadh.', insAppreciation: 'Value Appreciation', insValOldTitle: '2008 Base (Um Al-Khair)', insValOld: '10 SAR/m²', insValNewTitle: 'Current Valuation', insValNew: '~200 SAR/m²', km: 'km', km2: 'km²', val10: '10 SAR/m² (2008)', val200: '~200 SAR/m² (Today)', valOldLabel: '2008 Value', valCurrentLabel: 'Current Value'
+        },
+        ar: {
+            toggleText: 'English', title: 'مستكشف خريطة الاستثمار',
+            step1: 'التراث', step2: 'الارتفاع', step3: 'التحول', step4: 'التوسع', step5: 'الفرصة',
+            legendTitle: 'مفتاح الخريطة', legHeritage: 'المناطق التراثية والمميزة', legElevation: 'الانحدار الجغرافي', legTransform: 'التحول والمشاريع العملاقة', legExpansion: 'أراضي التوسع والاستثمار', legRoute: 'مسار الطريق السريع الرئيسي', legMetro: 'مسار مترو 7 المخطط',
+            insightsTitle: 'رؤى السوق', insScaleTitle: 'حجم التحول', insScaleDesc: 'المنطقة الرئيسية للقدية، لتكون عاصمة الترفيه بأكثر من 400 معلم.', insAccessTitle: 'الوصول للبنية التحتية', insAccessDesc: 'شبكة مترو الرياض ذاتية القيادة، تربط الدرعية مباشرة بغرب الرياض.', insAppreciation: 'نمو القيمة', insValOldTitle: 'أساس 2008 (أم الخير)', insValOld: '10 ريال/م²', insValNewTitle: 'التقييم الحالي', insValNew: '~200 ريال/م²', km: 'كم', km2: 'كم²', val10: '10 ريال/م² (2008)', val200: '~200 ريال/م² (اليوم)', valOldLabel: 'قيمة 2008', valCurrentLabel: 'القيمة الحالية'
+        }
+    };
+
+    let currentLang = 'en';
+
+    function toggleLanguage() {
+        currentLang = currentLang === 'en' ? 'ar' : 'en';
+        document.documentElement.lang = currentLang;
+        document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+
+        document.getElementById('lang-toggle-text').innerText = dict[currentLang].toggleText;
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            if (dict[currentLang][el.getAttribute('data-i18n')]) {
+                el.innerText = dict[currentLang][el.getAttribute('data-i18n')];
+            }
+        });
+
+        hideNodePopup(); // hide custom popup on language change
+        renderMarkers();
+    }
+
+    // ----------------------------------------------------------------
+    // 2. Setup Base Layers
+    // ----------------------------------------------------------------
+    const satelliteLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { maxZoom: 20 });
+    const terrainLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', { maxZoom: 20 });
+
+    const map = L.map('map', {
+        zoomControl: false,
+        zoomSnap: 0,
+        zoomDelta: 0.25,
+        wheelPxPerZoomLevel: 60,
+        wheelDebounceTime: 20,
+        preferCanvas: true, // Forces lines to render via Canvas (fixes missing lines in html2canvas screenshots)
+        layers: [satelliteLayer]
+    }).setView([24.4500, 46.1500], 9);
+
+    let currentMapType = 'satellite';
+    function toggleMapType() {
+        const icon = document.getElementById('map-type-icon');
+        if (currentMapType === 'satellite') {
+            map.removeLayer(satelliteLayer); map.addLayer(terrainLayer); currentMapType = 'terrain';
+            icon.setAttribute('data-lucide', 'mountain'); icon.classList.add('text-brand');
+        } else {
+            map.removeLayer(terrainLayer); map.addLayer(satelliteLayer); currentMapType = 'satellite';
+            icon.setAttribute('data-lucide', 'layers'); icon.classList.remove('text-brand');
+        }
+        lucide.createIcons();
+    }
+
+    // ----------------------------------------------------------------
+    // 3. UI Toggle & Map Rotate Features (Upgraded Sequential Animation)
+    // ----------------------------------------------------------------
+    const cardTimeouts = {};
+
+    function toggleIconCard(cardId) {
+        const card = document.getElementById(cardId);
+        const chevron = card.querySelector('.card-chevron');
+        const isIconOnly = card.classList.contains('icon-only');
+        const isCollapsed = card.classList.contains('is-collapsed');
+
+        // Clear any pending animations to prevent glitches during rapid clicking
+        if (cardTimeouts[cardId]) clearTimeout(cardTimeouts[cardId]);
+
+        if (!isIconOnly && !isCollapsed) {
+            // STEP 1: Collapse the body content first
+            card.classList.add('is-collapsed');
+            if (chevron) chevron.classList.add('rotate-180');
+
+            // STEP 2: Shrink the width into a circular icon after the body hides
+            cardTimeouts[cardId] = setTimeout(() => {
+                card.classList.add('icon-only');
+            }, 400); // Wait 400ms for height CSS transition
+
+        } else {
+            // STEP 1: Expand the width of the card back to normal
+            card.classList.remove('icon-only');
+
+            // STEP 2: Drop down the body content after the width expands
+            cardTimeouts[cardId] = setTimeout(() => {
+                card.classList.remove('is-collapsed');
+                if (chevron) chevron.classList.remove('rotate-180');
+            }, 400); // Wait 400ms for width CSS transition
+        }
+    }
+
+    // Default mobile state: Collapse cards into icons to save screen space
+    if (window.innerWidth < 768) {
+        ['card-title', 'card-legend', 'card-insights'].forEach(id => {
+            const card = document.getElementById(id);
+            if(card) {
+                card.classList.add('is-collapsed');
+                card.classList.add('icon-only');
+                const chevron = card.querySelector('.card-chevron');
+                if(chevron) chevron.classList.add('rotate-180');
+            }
+        });
+    }
+
+    let currentMapRotation = 0;
+    function rotateMap() {
+        currentMapRotation += 90;
+        document.documentElement.style.setProperty('--map-rot', currentMapRotation + 'deg');
+        setTimeout(recenterMap, 600); // Trigger a smooth recenter as the map finishes rotating
+    }
+
+    // ----------------------------------------------------------------
+    // 4. Data Integration & Custom Node Overlay Popup
+    // ----------------------------------------------------------------
+    const themeColors = { brand: '#64090c', primary: '#9c0512', dark: '#0e0000', sand: '#efeacd', highlight: '#f8d794', surface: '#f5f5f0' };
+
+    const stepsData = [
+        {
+            id: 1, labelPos: "top", lat: 24.7335, lng: 46.5746, zone: "brand", pulse: true, icon: "landmark",
+            en: { t: "Diriyah", s: "Birthplace of Saudi Arabia & Vision 2030<br>At-Turaif (UNESCO Site)" },
+            ar: { t: "الدرعية", s: "مهد المملكة ورؤية 2030<br>حي الطريف (موقع يونسكو)" },
+            distance: { en: "15 min from Central Riyadh", ar: "15 دقيقة من وسط الرياض" },
+            altitude: { en: "620m Elev.", ar: "ارتفاع 620 م" },
+            image: "https://assets-diriyah.diriyah.me/aedacdf96dc343aeb62ad421d60c0bc6?width=1080&quality=80&transform=true&format=webp",
+            amenities: { en: ["Museums", "Luxury Dining", "Metro Access"], ar: ["متاحف", "مطاعم فاخرة", "وصول للمترو"] },
+            stats: { en: [{ l: "Target Visitors", v: "27M/yr" }, { l: "Area", v: "14 km²" }], ar: [{ l: "الزوار المستهدفين", v: "27 مليون/سنوياً" }, { l: "المساحة", v: "14 كم²" }] }
+        },
+        {
+            id: 2, labelPos: "bottom", lat: 24.8157, lng: 46.4358, zone: "brand", icon: "tree-pine",
+            en: { t: "Al Ammariyah", s: "High-end farms & estates<br>Upper plateau" },
+            ar: { t: "العمارية", s: "مزارع وعقارات فاخرة<br>الهضبة العليا" },
+            distance: { en: "25 min from Diriyah", ar: "25 دقيقة من الدرعية" },
+            altitude: { en: "700m Elev.", ar: "ارتفاع 700 م" },
+            image: "https://images.unsplash.com/photo-1552832225-b467ec6c5ce2?auto=format&fit=crop&w=400&h=200&q=80",
+            amenities: { en: ["Luxury Resorts", "Equestrian Clubs", "Private Farms"], ar: ["منتجعات فاخرة", "أندية فروسية", "مزارع خاصة"] },
+            stats: { en: [{ l: "Avg Farm Size", v: "10,000 m²" }], ar: [{ l: "متوسط مساحة المزرعة", v: "10,000 م²" }] }
+        },
+        {
+            id: 3, labelPos: "top", lat: 24.6200, lng: 46.3100, zone: "brand", icon: "mountain",
+            en: { t: "Jabal Tuwaiq", s: "Symbol of strength and elevation" },
+            ar: { t: "جبل طويق", s: "رمز القوة والشموخ" },
+            distance: { en: "35 min from Riyadh", ar: "35 دقيقة من الرياض" },
+            altitude: { en: "1,100m Elev.", ar: "ارتفاع 1,100 م" },
+            image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Edge_of_the_world_1.jpg/800px-Edge_of_the_world_1.jpg",
+            amenities: { en: ["Hiking Trails", "Scenic Viewpoints", "Heritage Sites"], ar: ["مسارات مشي", "مطلات بانورامية", "مواقع تراثية"] },
+            stats: { en: [{ l: "Escarpment Length", v: "800 km" }, { l: "Peak Elevation", v: "1,100 m" }], ar: [{ l: "طول الحافة", v: "800 كم" }, { l: "أعلى ارتفاع", v: "1,100 م" }] }
+        },
+        {
+            id: 4, labelPos: "bottom", lat: 24.5550, lng: 46.2800, zone: "primary", pulse: true, icon: "arrow-down",
+            en: { t: "Qiddiya Descent", s: "Strong geographical drop" },
+            ar: { t: "نزول القدية", s: "انحدار جغرافي قوي" },
+            distance: { en: "Direct access to Qiddiya", ar: "وصول مباشر للقدية" },
+            altitude: { en: "800m to 500m Drop", ar: "انحدار 800 م إلى 500 م" },
+            image: "https://images.unsplash.com/photo-1627885448651-7fbd7bb72986?auto=format&fit=crop&w=400&h=200&q=80",
+            amenities: { en: ["Highway Access", "Observation Decks"], ar: ["وصول سريع", "منصات مشاهدة"] },
+            stats: { en: [{ l: "Elevation Drop", v: "300 m" }], ar: [{ l: "الانحدار الجغرافي", v: "300 م" }] }
+        },
+        {
+            id: 5, labelPos: "top", lat: 24.5200, lng: 46.2500, zone: "dark", icon: "castle",
+            en: { t: "Al-Maqbel Palaces", s: "Start of flat land" },
+            ar: { t: "قصور المقبل", s: "بداية الأراضي المنبسطة" },
+            distance: { en: "10 min from Qiddiya Descent", ar: "10 دقائق من نزول القدية" },
+            altitude: { en: "650m Elev.", ar: "ارتفاع 650 م" },
+            image: "https://images.unsplash.com/photo-1549485859-99fc5427d2c3?auto=format&fit=crop&w=400&h=200&q=80",
+            amenities: { en: ["Historical Palaces", "Local Farms"], ar: ["قصور تاريخية", "مزارع محلية"] },
+            stats: { en: [{ l: "Terrain Type", v: "Flat Plateau" }], ar: [{ l: "نوع التضاريس", v: "هضبة مستوية" }] }
+        },
+        {
+            id: 6, labelPos: "bottom", lat: 24.5878, lng: 46.3075, zone: "dark", pulse: true, icon: "ferris-wheel",
+            en: { t: "Qiddiya Project", s: "Area: 360 km² | 400+ Attractions" },
+            ar: { t: "مشروع القدية", s: "المساحة: 360 كم² | +400 معلم" },
+            distance: { en: "40 min from Riyadh Center", ar: "40 دقيقة من وسط الرياض" },
+            altitude: { en: "600m Elev.", ar: "ارتفاع 600 م" },
+            image: "https://images.unsplash.com/photo-1513624838641-799d141e9774?auto=format&fit=crop&w=400&h=200&q=80",
+            amenities: { en: ["Theme Parks", "F1 Track", "Water Parks", "Golf Courses"], ar: ["مدن ترفيهية", "حلبة فورمولا 1", "حدائق مائية", "ملاعب جولف"] },
+            stats: { en: [{ l: "Total Area", v: "360 km²" }, { l: "Attractions", v: "400+" }], ar: [{ l: "المساحة الإجمالية", v: "360 كم²" }, { l: "المعالم الترفيهية", v: "+400" }] }
+        },
+        {
+            id: 7, labelPos: "top", lat: 24.6067, lng: 46.1281, zone: "dark", icon: "leaf",
+            en: { t: "Dhurma", s: "Start of flat land expansion" },
+            ar: { t: "ضرماء", s: "بداية التوسع في الأراضي المنبسطة" },
+            distance: { en: "20 min from Qiddiya", ar: "20 دقيقة من القدية" },
+            altitude: { en: "580m Elev.", ar: "ارتفاع 580 م" },
+            image: "https://images.unsplash.com/photo-1592305541675-7377f0a711ff?auto=format&fit=crop&w=400&h=200&q=80",
+            amenities: { en: ["Agricultural Zones", "Local Markets"], ar: ["مناطق زراعية", "أسواق محلية"] },
+            stats: { en: [{ l: "Growth Rate", v: "High" }], ar: [{ l: "معدل النمو", v: "مرتفع" }] }
+        },
+        {
+            id: 8, labelPos: "bottom", lat: 24.4750, lng: 46.2536, zone: "highlight", icon: "door-open",
+            en: { t: "Al-Muzahmiyah", s: "Gateway to West Riyadh" },
+            ar: { t: "المزاحمية", s: "بوابة غرب الرياض" },
+            distance: { en: "30 min from Riyadh", ar: "30 دقيقة من الرياض" },
+            altitude: { en: "550m Elev.", ar: "ارتفاع 550 م" },
+            image: "https://images.unsplash.com/photo-1588662998634-1cd5664fc60d?auto=format&fit=crop&w=400&h=200&q=80",
+            amenities: { en: ["Commercial Hubs", "Universities", "Hospitals"], ar: ["مراكز تجارية", "جامعات", "مستشفيات"] },
+            stats: { en: [{ l: "Population Est.", v: "60,000+" }], ar: [{ l: "التعداد السكاني", v: "+60,000" }] }
+        },
+        {
+            id: 9, labelPos: "top", lat: 24.4500, lng: 46.2000, zone: "highlight", icon: "flower-2",
+            en: { t: "Zahrat Al-Rabee", s: "New urban expansion" },
+            ar: { t: "زهرة الربيع", s: "توسع حضري جديد" },
+            distance: { en: "5 min from Muzahmiyah", ar: "5 دقائق من المزاحمية" },
+            altitude: { en: "540m Elev.", ar: "ارتفاع 540 م" },
+            image: "https://images.unsplash.com/photo-1506540679803-516d25164bc9?auto=format&fit=crop&w=400&h=200&q=80",
+            amenities: { en: ["Residential Zones", "Public Parks"], ar: ["مناطق سكنية", "حدائق عامة"] },
+            stats: { en: [{ l: "Development Stage", v: "Phase 1" }], ar: [{ l: "مرحلة التطوير", v: "المرحلة 1" }] }
+        },
+        {
+            id: 10, labelPos: "bottom", lat: 24.3500, lng: 46.0500, zone: "highlight", icon: "route",
+            en: { t: "Riyadh–Makkah Hwy", s: "Main national road" },
+            ar: { t: "طريق الرياض - مكة", s: "الطريق الوطني الرئيسي" },
+            distance: { en: "Cross-country connection", ar: "ربط عبر البلاد" },
+            altitude: { en: "560m Elev.", ar: "ارتفاع 560 م" },
+            image: "https://images.unsplash.com/photo-1502899576159-f224dc2349fa?auto=format&fit=crop&w=400&h=200&q=80",
+            amenities: { en: ["Service Stations", "Logistics Hubs"], ar: ["محطات خدمة", "مراكز لوجستية"] },
+            stats: { en: [{ l: "Daily Traffic", v: "Very High" }], ar: [{ l: "الحركة المرورية", v: "كثيفة جداً" }] }
+        },
+        {
+            id: 11, labelPos: "top", lat: 24.2500, lng: 45.9000, zone: "highlight", icon: "route",
+            en: { t: "Marat – Shaqra Road", s: "Western expansion corridor" },
+            ar: { t: "طريق مرات - شقراء", s: "ممر التوسع الغربي" },
+            distance: { en: "Direct link to Western hubs", ar: "رابط مباشر للغرب" },
+            altitude: { en: "600m Elev.", ar: "ارتفاع 600 م" },
+            image: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=400&h=200&q=80",
+            amenities: { en: ["Industrial Areas", "Rest Stops"], ar: ["مناطق صناعية", "استراحات طرق"] },
+            stats: { en: [{ l: "Corridor Type", v: "Commercial" }], ar: [{ l: "نوع الممر", v: "تجاري" }] }
+        },
+        {
+            id: 12, labelPos: "bottom", lat: 24.1800, lng: 45.7500, zone: "highlight", icon: "route",
+            en: { t: "Al-Khalayiq Road", s: "Direct access road to Al Jella" },
+            ar: { t: "طريق الخلايق", s: "طريق وصول مباشر للجلة" },
+            distance: { en: "15 min to Al Jella", ar: "15 دقيقة للجلة" },
+            altitude: { en: "620m Elev.", ar: "ارتفاع 620 م" },
+            image: "https://images.unsplash.com/photo-1415594445260-63e18261587e?auto=format&fit=crop&w=400&h=200&q=80",
+            amenities: { en: ["New Intersections", "Planned Services"], ar: ["تقاطعات جديدة", "خدمات مخططة"] },
+            stats: { en: [{ l: "Accessibility", v: "Upgraded" }], ar: [{ l: "الوصولية", v: "مُحسنة" }] }
+        },
+        {
+            id: 13, labelPos: "top", lat: 24.1200, lng: 45.6500, zone: "highlight", pulse: true, hasPrices: true, icon: "banknote",
+            en: { t: "Al Ardiyah", s: "Unprecedented Growth Area" },
+            ar: { t: "الأرضية", s: "منطقة نمو غير مسبوق" },
+            distance: { en: "Strategic mid-point", ar: "نقطة استراتيجية" },
+            altitude: { en: "650m Elev.", ar: "ارتفاع 650 م" },
+            image: "https://images.unsplash.com/photo-1518458028785-8fbcd101ebb9?auto=format&fit=crop&w=400&h=200&q=80",
+            amenities: { en: ["Investment Lots", "Future Commercial"], ar: ["أراضي استثمارية", "مشاريع تجارية مستقبلية"] },
+            stats: { en: [{ l: "ROI Potential", v: "Exceptional" }, { l: "Demand", v: "Surging" }], ar: [{ l: "العائد الاستثماري", v: "استثنائي" }, { l: "الطلب", v: "متزايد" }] }
+        },
+        {
+            id: 14, labelPos: "bottom", lat: 24.0833, lng: 45.6000, zone: "highlight", icon: "refresh-cw",
+            en: { t: "Tabrak", s: "Transitional zone" },
+            ar: { t: "تبراك", s: "منطقة انتقالية" },
+            distance: { en: "Bordering Al Jella", ar: "متاخمة للجلة" },
+            altitude: { en: "680m Elev.", ar: "ارتفاع 680 م" },
+            image: "https://images.unsplash.com/photo-1586528116311-ad8ed7c83a7f?auto=format&fit=crop&w=400&h=200&q=80",
+            amenities: { en: ["Agri-Business", "Warehousing"], ar: ["أعمال زراعية", "مستودعات"] },
+            stats: { en: [{ l: "Land Use", v: "Mixed" }], ar: [{ l: "استخدام الأراضي", v: "مختلط" }] }
+        },
+        {
+            id: 15, labelPos: "top", lat: 24.0500, lng: 45.5500, zone: "highlight", pulse: true, hasPrices: true, icon: "crosshair",
+            en: { t: "Al Jella", s: "Investment opportunity<br>Final Destination" },
+            ar: { t: "الجلة", s: "فرصة استثمارية<br>الوجهة النهائية" },
+            distance: { en: "Less than 1 hr from Riyadh", ar: "أقل من ساعة من الرياض" },
+            altitude: { en: "700m Elev.", ar: "ارتفاع 700 م" },
+            image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=400&h=200&q=80",
+            amenities: { en: ["Master Planned City", "Major Connectivity"], ar: ["مدينة مخططة", "ربط رئيسي"] },
+            stats: { en: [{ l: "Development Scope", v: "Massive" }, { l: "Investment Rank", v: "Tier 1" }], ar: [{ l: "نطاق التطوير", v: "ضخم" }, { l: "تصنيف الاستثمار", v: "فئة 1" }] }
+        },
+        {
+            id: 16, labelPos: "bottom", lat: 24.0200, lng: 45.5000, zone: "highlight", icon: "map-pinned",
+            en: { t: "Plan 521", s: "Actual selling area" },
+            ar: { t: "مخطط 521", s: "منطقة البيع الفعلية" },
+            distance: { en: "Heart of Al Jella", ar: "قلب الجلة" },
+            altitude: { en: "710m Elev.", ar: "ارتفاع 710 م" },
+            image: "https://images.unsplash.com/photo-1541888043685-6126dc6a0c5c?auto=format&fit=crop&w=400&h=200&q=80",
+            amenities: { en: ["Ready Infrastructure", "Deeded Plots"], ar: ["بنية تحتية جاهزة", "أراضي بصكوك"] },
+            stats: { en: [{ l: "Availability", v: "Selling Fast" }], ar: [{ l: "التوفر", v: "بيع سريع" }] }
+        }
+    ];
+
+    let markerLayers = [];
+    const mainPathLatLngs = [];
+    const metroPathLatLngs = [];
+
+    // Opens Custom Fixed Description Panel Overlay
+    function showNodePopup(step) {
+        if (!uiVisible) toggleUI(); // Auto unhide UI if hidden by the user
+
+        const isRtl = currentLang === 'ar';
+        const popup = document.getElementById('custom-node-popup');
+        const markerColor = themeColors[step.zone] || themeColors.dark;
+
+        let imageHTML = '';
+        if (step.image) {
+            imageHTML = `<div class="w-full h-32 md:h-40 rounded-xl mb-4 bg-sand/30 border border-sand shadow-sm overflow-hidden"><img src="${step.image}" class="w-full h-full object-cover" alt="Location Thumbnail"></div>`;
+        }
+
+        let investmentHTML = '';
+        if (step.hasPrices) {
+            investmentHTML = `<div class="mt-4 bg-sand/40 p-3 rounded-xl border border-brand/20 shadow-inner">
+                <div class="flex justify-between items-center mb-1.5"><span class="text-xs text-dark/60 font-medium">${dict[currentLang].valOldLabel}</span><span class="text-xs text-dark/50 line-through">${dict[currentLang].val10}</span></div>
+                <div class="flex justify-between items-center"><span class="text-xs text-primary font-bold">${dict[currentLang].valCurrentLabel}</span><span class="text-sm font-black text-dark bg-highlight px-2 py-1 rounded shadow-sm">${dict[currentLang].val200}</span></div></div>`;
+        }
+
+        let amenitiesHTML = '';
+        if (step.amenities) {
+            const pills = step.amenities[currentLang].map(am => `<span class="bg-sand/60 text-dark/90 px-2.5 py-1 rounded-md text-[10px] md:text-xs font-bold border border-sand shadow-sm whitespace-nowrap">${am}</span>`).join('');
+            amenitiesHTML = `<div class="mt-4"><div class="text-[10px] uppercase tracking-wider font-bold text-brand/70 mb-2 flex items-center gap-1.5"><i data-lucide="star" style="width: 14px; height: 14px;"></i> ${isRtl ? 'المرافق والخدمات' : 'Amenities & Features'}</div><div class="flex flex-wrap gap-2">${pills}</div></div>`;
+        }
+
+        let locationMetaHTML = '';
+        if (step.distance || step.altitude) {
+            const dist = step.distance ? `<div class="flex items-center gap-1.5 text-xs font-bold text-primary bg-primary/5 px-2.5 py-1.5 rounded-lg border border-primary/10"><i data-lucide="map-pin" style="width: 14px; height: 14px;"></i> ${step.distance[currentLang]}</div>` : '';
+            const alt = step.altitude ? `<div class="flex items-center gap-1.5 text-xs font-bold text-brand bg-brand/5 px-2.5 py-1.5 rounded-lg border border-brand/10"><i data-lucide="mountain" style="width: 14px; height: 14px;"></i> ${step.altitude[currentLang]}</div>` : '';
+            locationMetaHTML = `<div class="mt-4 flex flex-wrap items-center gap-2">${dist}${alt}</div>`;
+        }
+
+        let statsHTML = '';
+        if (step.stats) {
+            const statBlocks = step.stats[currentLang].map(st => `<div class="flex flex-col"><span class="text-[9px] md:text-[10px] uppercase tracking-wider font-bold text-dark/50 mb-0.5">${st.l}</span><span class="text-sm md:text-base font-black text-dark leading-none">${st.v}</span></div>`).join('');
+            statsHTML = `<div class="mt-4 grid grid-cols-2 gap-3 bg-surface p-3 rounded-xl border border-sand shadow-sm">${statBlocks}</div>`;
+        }
+
+        popup.innerHTML = `
+            ${imageHTML}
+            <div class="flex justify-between items-start mb-3" dir="${isRtl ? 'rtl' : 'ltr'}">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center shadow-sm border" style="background-color: ${markerColor}15; border-color: ${markerColor}30;">
+                        <i data-lucide="${step.icon}" style="color: ${markerColor}; width: 26px; height: 26px;"></i>
+                    </div>
+                    <h3 class="font-black text-xl text-brand leading-tight m-0">${step[currentLang].t}</h3>
+                </div>
+                <button onclick="hideNodePopup()" class="text-dark/40 hover:text-brand transition-colors p-2 bg-sand/50 hover:bg-sand rounded-full shrink-0 ${isRtl ? 'mr-3' : 'ml-3'}">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <p class="text-sm md:text-base text-dark/80 font-semibold leading-relaxed m-0" dir="${isRtl ? 'rtl' : 'ltr'}">${step[currentLang].s}</p>
+            <div dir="${isRtl ? 'rtl' : 'ltr'}">
+                ${locationMetaHTML}
+                ${statsHTML}
+                ${amenitiesHTML}
+                ${investmentHTML}
+            </div>
+        `;
+
+        popup.style.borderTopColor = markerColor;
+        popup.classList.remove('translate-y-10', 'opacity-0', 'pointer-events-none');
+
+        lucide.createIcons();
+    }
+
+    // Closes Custom Overlay
+    function hideNodePopup() {
+        const popup = document.getElementById('custom-node-popup');
+        popup.classList.add('translate-y-10', 'opacity-0', 'pointer-events-none');
+    }
+
+    function renderMarkers() {
+        markerLayers.forEach(m => map.removeLayer(m));
+        markerLayers = [];
+        const isRtl = currentLang === 'ar';
+
+        stepsData.forEach((step) => {
+            if (mainPathLatLngs.length < stepsData.length) {
+                mainPathLatLngs.push([step.lat, step.lng]);
+                if (step.id <= 6) metroPathLatLngs.push([step.lat, step.lng]);
+            }
+
+            const markerColor = themeColors[step.zone] || themeColors.dark;
+            const textColor = step.zone === 'highlight' || step.zone === 'sand' ? themeColors.dark : themeColors.surface;
+            const pulseHTML = step.pulse ? '<div class="marker-pulse" style="background-color: ' + markerColor + ';"></div>' : '';
+
+            // Smart alternate positioning to prevent overlap
+            let labelPosClasses = "top-[130%] left-1/2 -translate-x-1/2";
+            if (step.labelPos === "top") labelPosClasses = "bottom-[130%] left-1/2 -translate-x-1/2";
+            if (step.labelPos === "right") labelPosClasses = "left-[130%] top-1/2 -translate-y-1/2";
+            if (step.labelPos === "left") labelPosClasses = "right-[130%] top-1/2 -translate-y-1/2";
+
+            const iconHtml = '<div class="marker-rotator relative flex flex-col items-center justify-center group">' +
+                '<div class="journey-marker group-hover:scale-125 transition-transform duration-300 z-10" style="background-color: ' + markerColor + '; width: 32px; height: 32px; color: ' + textColor + '; border-color: ' + themeColors.surface + '">' +
+                pulseHTML +
+                '<i data-lucide="' + step.icon + '" style="width: 18px; height: 18px;"></i>' +
+                '</div>' +
+                '<div class="node-label absolute ' + labelPosClasses + ' bg-surface/95 backdrop-blur-md px-2 py-1 md:px-2.5 md:py-1.5 rounded-lg text-[10px] md:text-xs font-black text-dark shadow-[0_4px_15px_rgba(14,0,0,0.2)] border-2 border-sand/80 whitespace-nowrap z-[100] group-hover:z-[200] group-hover:border-brand pointer-events-none" dir="' + (isRtl ? 'rtl' : 'ltr') + '">' +
+                step[currentLang].t + '</div></div>';
+
+            const customIcon = L.divIcon({
+                className: 'custom-icon-wrapper',
+                html: iconHtml,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16] // Center exact anchor to make hover triggers crisp
+            });
+
+            const marker = L.marker([step.lat, step.lng], { icon: customIcon }).addTo(map);
+            marker.on('click', () => showNodePopup(step));
+            markerLayers.push(marker);
+        });
+
+        lucide.createIcons();
+    }
+
+    renderMarkers();
+
+    // ----------------------------------------------------------------
+    // 5. Map Control Logic (Zoom visibility scaling & Toggles)
+    // ----------------------------------------------------------------
+    let labelMode = 'auto'; // 'auto', 'show', 'hide'
+    let animationsActive = true;
+    let uiVisible = true;
+
+    function toggleUI() {
+        uiVisible = !uiVisible;
+        const icon = document.getElementById('ui-icon');
+
+        if (!uiVisible) {
+            document.body.classList.add('ui-hidden');
+            icon.setAttribute('data-lucide', 'eye'); // Show eye to un-hide
+            icon.classList.add('text-primary');
+        } else {
+            document.body.classList.remove('ui-hidden');
+            icon.setAttribute('data-lucide', 'eye-off'); // Show eye-off when UI is visible
+            icon.classList.remove('text-primary');
+        }
+        lucide.createIcons();
+    }
+
+    function toggleAnimations() {
+        animationsActive = !animationsActive;
+        const icon = document.getElementById('anim-icon');
+
+        if (!animationsActive) {
+            document.body.classList.add('disable-animations');
+            icon.setAttribute('data-lucide', 'zap-off');
+            icon.classList.add('text-primary'); // Highlight to show animations are disabled
+        } else {
+            document.body.classList.remove('disable-animations');
+            icon.setAttribute('data-lucide', 'zap');
+            icon.classList.remove('text-primary');
+        }
+        lucide.createIcons();
+    }
+
+    function toggleLabelsOverride() {
+        const icon = document.getElementById('labels-icon');
+        if (labelMode === 'auto' || labelMode === 'show') {
+            labelMode = 'hide';
+            document.body.classList.add('hide-labels');
+            icon.classList.add('text-primary'); // Highlight to show it's forcing them off
+        } else {
+            labelMode = 'show';
+            document.body.classList.remove('hide-labels');
+            icon.classList.remove('text-primary');
+        }
+    }
+
+    function handleZoomVisibility() {
+        if (labelMode !== 'auto') return; // Don't apply auto-zoom logic if manually overridden
+        if (map.getZoom() < 9.5) {
+            document.body.classList.add('hide-labels');
+        } else {
+            document.body.classList.remove('hide-labels');
+        }
+    }
+
+    map.on('zoomend', handleZoomVisibility);
+    handleZoomVisibility(); // Check initial state
+
+    // ----------------------------------------------------------------
+    // 6. Flowing Paths & Centering Mechanics
+    // ----------------------------------------------------------------
+    L.polyline(metroPathLatLngs, { color: themeColors.brand, weight: 5, opacity: 0.9, dashArray: '8, 12', className: 'flowing-path-fast' }).addTo(map);
+    const journeyLine = L.polyline(mainPathLatLngs, { color: themeColors.primary, weight: 3, opacity: 0.8, dashArray: '5, 8', className: 'flowing-path' }).addTo(map);
+
+    function recenterMap() {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const vmax = Math.max(vw, vh);
+
+        let visibleW = vw;
+        let visibleH = vh;
+
+        // Handle padding math if map is visually rotated by 90 or 270 degrees
+        if (Math.abs(currentMapRotation) % 180 !== 0) {
+            visibleW = vh;
+            visibleH = vw;
+        }
+
+        // Compensates the zoom bounds against the massively enlarged 200vmax map wrapper
+        const padX = (2 * vmax - visibleW) / 2;
+        const padY = (2 * vmax - visibleH) / 2;
+
+        map.flyToBounds(journeyLine.getBounds(), {
+            paddingTopLeft: [padX + 50, padY + 50],
+            paddingBottomRight: [padX + 50, padY + 50],
+            duration: 1.5
+        });
+    }
+
+    setTimeout(recenterMap, 500);
+
+    // ----------------------------------------------------------------
+    // 7. Map Animation Tour Logic
+    // ----------------------------------------------------------------
+    let tourActive = false;
+    let tourStepIndex = 0;
+    let tourTimeout;
+
+    function toggleTour() {
+        const icon = document.getElementById('tour-icon');
+        if (tourActive) {
+            // Stop Tour
+            tourActive = false;
+            clearTimeout(tourTimeout);
+            icon.setAttribute('data-lucide', 'play');
+            icon.classList.remove('text-primary');
+            hideNodePopup();
+        } else {
+            // Start Tour
+            tourActive = true;
+            tourStepIndex = 0;
+            icon.setAttribute('data-lucide', 'square'); // Change to stop icon
+            icon.classList.add('text-primary');
+
+            // Ensure labels are visible during the tour for better context
+            if (labelMode === 'hide') toggleLabelsOverride();
+
+            playNextTourStep();
+        }
+        lucide.createIcons();
+    }
+
+    function playNextTourStep() {
+        if (!tourActive) return;
+
+        if (tourStepIndex >= stepsData.length) {
+            toggleTour(); // End of tour, stop it
+            recenterMap();
+            return;
+        }
+
+        const step = stepsData[tourStepIndex];
+        hideNodePopup();
+
+        // Fly to next location smoothly
+        map.flyTo([step.lat, step.lng], 12.5, {
+            duration: 2.5, // 2.5 seconds transit time
+            easeLinearity: 0.25
+        });
+
+        // Wait for flight to finish, then open card
+        tourTimeout = setTimeout(() => {
+            if (!tourActive) return;
+            showNodePopup(step);
+
+            // Leave card open for 4.5 seconds to allow reading, then move to next
+            tourTimeout = setTimeout(() => {
+                tourStepIndex++;
+                playNextTourStep();
+            }, 4500);
+
+        }, 3000);
+    }
+
+    // ----------------------------------------------------------------
+    // 8. Screenshot Logic (High-Res Capture)
+    // ----------------------------------------------------------------
+    async function takeScreenshot() {
+        const iconBtn = document.getElementById('screenshot-icon');
+
+        // Safely replace the element to trigger the loading state (Lucide changes DOM references)
+        iconBtn.outerHTML = '<i id="screenshot-icon" data-lucide="loader" class="w-5 h-5 md:w-6 md:h-6 transition-colors animate-spin text-primary"></i>';
+        lucide.createIcons();
+
+        try {
+            const container = document.getElementById('map-container');
+
+            // Capture the entire map container
+            const canvas = await html2canvas(container, {
+                useCORS: true,       // Attempt to load external images (like map tiles)
+                allowTaint: true,    // Allow cross-origin images to be drawn
+                scale: 3,            // 3x Scale for ultra-high resolution
+                backgroundColor: '#efeacd',
+                logging: false
+            });
+
+            // Convert to a PNG image and trigger download
+            const link = document.createElement('a');
+            link.download = `Investment_Map_HighRes_${new Date().toISOString().slice(0, 10)}.png`;
+            link.href = canvas.toDataURL('image/png', 1.0);
+            link.click();
+
+        } catch (error) {
+            console.error("Screenshot capture failed:", error);
+            alert("Screenshot failed. Note: Strict browser security (CORS) might restrict capturing external map tiles in some environments.");
+        } finally {
+            // Restore camera icon correctly by resetting the DOM element
+            const updatedIconBtn = document.getElementById('screenshot-icon');
+            if (updatedIconBtn) {
+                updatedIconBtn.outerHTML = '<i id="screenshot-icon" data-lucide="camera" class="w-5 h-5 md:w-6 md:h-6 transition-colors"></i>';
+                lucide.createIcons();
+            }
+        }
+    }
+
+    // Initialize all icons
+    lucide.createIcons();
+
+</script>
+</body>
+</html>
