@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
     <title>خريطة ياقوت الاستثمارية التفاعلية</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
@@ -11,15 +11,15 @@
         *{margin:0;padding:0;box-sizing:border-box;}
         :root{
             --brand:#64090c;--primary:#9c0512;--dark:#1a0a0b;
-            --sand:#efeacd;--sand-light:#f7f4e8;--highlight:#f8d794;
+            --sand:#efeacd;--sand-light:#f7f4e8;--highlight:#f8d794;--cream:#f5f0e1;
             --gold:#C5963A;--gd:#8B6914;--metro:#1a6b8a;
             --gn:#1A5C2A;--gr:#2d8a4e;--dirab:#5B7B6A;
-            --surface:#faf8f2;--glass:rgba(255,255,255,0.88);
-            --glass-border:rgba(197,150,58,0.15);
-            --sh:0 8px 32px rgba(0,0,0,0.08);
-            --r:14px;
+            --surface:#faf8f2;
+            --glass:rgba(255,255,255,0.9);--glass-border:rgba(197,150,58,0.15);
+            --sh:0 6px 24px rgba(0,0,0,0.07);--r:12px;
         }
-        body{font-family:'Tajawal',sans-serif;color:var(--dark);overflow:hidden;height:100vh;width:100vw;}
+        html{-webkit-text-size-adjust:100%;}
+        body{font-family:'Tajawal',sans-serif;color:var(--dark);overflow:hidden;height:100vh;height:100dvh;width:100vw;position:relative;}
 
         /* ══ MAP ══ */
         #map{position:absolute;inset:0;z-index:1;}
@@ -28,202 +28,154 @@
 
         /* ══ TOP BAR ══ */
         .topbar{
-            position:fixed;top:16px;right:16px;left:16px;z-index:1000;
+            position:fixed;top:0;right:0;left:0;z-index:1000;
             display:flex;align-items:center;justify-content:space-between;
             background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-            border:1px solid var(--glass-border);border-radius:16px;
-            padding:10px 20px;box-shadow:var(--sh);
+            border-bottom:1px solid var(--glass-border);
+            padding:8px 20px;box-shadow:var(--sh);
         }
-        .topbar-right{display:flex;align-items:center;gap:14px;}
-        .topbar-logo{height:36px;}
-        .topbar-title{font-size:18px;font-weight:800;color:var(--brand);}
-        .topbar-sub{font-size:11px;color:var(--gd);font-weight:500;}
-        .topbar-left{display:flex;align-items:center;gap:10px;}
+        .topbar-right{display:flex;align-items:center;gap:12px;}
+        .topbar-logo{height:34px;}
+        .topbar-title{font-size:16px;font-weight:800;color:var(--brand);}
+        .topbar-sub{font-size:10px;color:var(--gd);font-weight:500;}
+        .topbar-left{display:flex;align-items:center;gap:8px;}
+
+        /* ══ STATS (inside topbar, not separate) ══ */
+        .topbar-stats{display:flex;gap:6px;margin-right:auto;margin-left:16px;}
+        .ts{
+            background:var(--sand-light);border:1px solid var(--glass-border);
+            border-radius:8px;padding:4px 12px;text-align:center;
+        }
+        .ts-val{font-size:16px;font-weight:900;color:var(--brand);direction:ltr;display:inline-block;}
+        .ts-label{font-size:8px;color:var(--gd);display:block;}
 
         /* ══ BUTTONS ══ */
-        .btn{
-            border:none;border-radius:10px;font-family:'Tajawal';cursor:pointer;
-            display:inline-flex;align-items:center;gap:6px;transition:all 0.3s;
-            font-weight:600;
-        }
-        .btn-play{
-            background:var(--brand);color:#fff;padding:10px 20px;font-size:13px;
-            box-shadow:0 4px 16px rgba(100,9,12,0.2);
-        }
-        .btn-play:hover{background:var(--primary);transform:translateY(-1px);}
+        .btn{border:none;border-radius:8px;font-family:'Tajawal';cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all 0.3s;font-weight:600;}
+        .btn-play{background:var(--brand);color:#fff;padding:8px 16px;font-size:12px;box-shadow:0 3px 12px rgba(100,9,12,0.2);}
+        .btn-play:hover{background:var(--primary);}
         .btn-play.playing{background:var(--gn);}
-        .btn-icon{
-            background:var(--glass);border:1px solid var(--glass-border);
-            color:var(--brand);padding:10px 12px;font-size:16px;
-            backdrop-filter:blur(12px);
-        }
-        .btn-icon:hover{background:rgba(255,255,255,0.95);border-color:var(--gold);}
+        .btn-icon{background:var(--glass);border:1px solid var(--glass-border);color:var(--brand);padding:8px 10px;font-size:14px;backdrop-filter:blur(12px);}
+        .btn-icon:hover{background:#fff;border-color:var(--gold);}
 
-        /* ══ ZOOM CONTROLS ══ */
-        .zoom-ctrl{
-            position:fixed;bottom:100px;left:16px;z-index:1000;
-            display:flex;flex-direction:column;gap:4px;
-        }
-        .zoom-btn{
-            width:42px;height:42px;border-radius:12px;border:1px solid var(--glass-border);
-            background:var(--glass);backdrop-filter:blur(12px);
-            display:flex;align-items:center;justify-content:center;
-            font-size:20px;font-weight:700;color:var(--brand);cursor:pointer;
-            transition:all 0.2s;
-        }
+        /* ══ ZOOM ══ */
+        .zoom-ctrl{position:fixed;bottom:80px;left:12px;z-index:1000;display:flex;flex-direction:column;gap:3px;}
+        .zoom-btn{width:38px;height:38px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--brand);cursor:pointer;transition:all 0.2s;}
         .zoom-btn:hover{background:#fff;border-color:var(--gold);}
 
-        /* ══ LEGEND PANEL ══ */
-        .legend-panel{
-            position:fixed;bottom:16px;right:16px;z-index:1000;
-            background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-            border:1px solid var(--glass-border);border-radius:var(--r);
-            padding:16px 18px;box-shadow:var(--sh);
-            min-width:220px;transition:all 0.4s;
-        }
-        .legend-panel.collapsed{padding:10px 16px;min-width:auto;}
+        /* ══ LEGEND ══ */
+        .legend-panel{position:fixed;bottom:12px;right:12px;z-index:1000;background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:var(--r);padding:12px 14px;box-shadow:var(--sh);min-width:200px;transition:all 0.4s;}
+        .legend-panel.collapsed{padding:8px 12px;min-width:auto;}
         .legend-panel.collapsed .leg-body{display:none;}
-        .leg-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:10px;}
-        .leg-header h4{font-size:13px;font-weight:700;color:var(--brand);}
-        .leg-toggle{font-size:14px;color:var(--gd);background:none;border:none;cursor:pointer;}
-        .leg-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:11px;font-weight:500;color:#555;}
-        .leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-        .leg-line{width:18px;height:3px;border-radius:2px;flex-shrink:0;}
-        .leg-dash{width:18px;border-top:2.5px dashed;flex-shrink:0;}
+        .leg-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:8px;}
+        .leg-header h4{font-size:12px;font-weight:700;color:var(--brand);}
+        .leg-toggle{font-size:12px;color:var(--gd);background:none;border:none;cursor:pointer;}
+        .leg-row{display:flex;align-items:center;gap:7px;margin-bottom:5px;font-size:10px;font-weight:500;color:#555;}
+        .leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+        .leg-line{width:16px;height:3px;border-radius:2px;flex-shrink:0;}
+        .leg-dash{width:16px;border-top:2px dashed;flex-shrink:0;}
 
-        /* ══ JOURNEY PROGRESS ══ */
-        .journey-bar{
-            position:fixed;bottom:16px;right:260px;left:70px;z-index:1000;
-            background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-            border:1px solid var(--glass-border);border-radius:var(--r);
-            padding:12px 18px;box-shadow:var(--sh);
-            display:flex;align-items:center;gap:10px;
-        }
-        .j-stops{display:flex;align-items:center;gap:0;flex:1;position:relative;}
-        .j-dot{
-            width:26px;height:26px;border-radius:50%;flex-shrink:0;
-            display:flex;align-items:center;justify-content:center;
-            font-size:8px;font-weight:800;color:#fff;cursor:pointer;
-            transition:all 0.3s;position:relative;z-index:2;
-            border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.15);
-        }
-        .j-dot:hover{transform:scale(1.2);}
-        .j-dot.active{transform:scale(1.3);box-shadow:0 4px 16px rgba(0,0,0,0.2);}
-        .j-dot .j-tip{
-            position:absolute;bottom:calc(100% + 8px);right:50%;transform:translateX(50%);
-            background:var(--dark);color:#fff;padding:4px 10px;border-radius:6px;
-            font-size:10px;font-weight:600;white-space:nowrap;opacity:0;
-            transition:opacity 0.2s;pointer-events:none;
-        }
+        /* ══ JOURNEY BAR ══ */
+        .journey-bar{position:fixed;bottom:12px;right:230px;left:60px;z-index:1000;background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:var(--r);padding:10px 14px;box-shadow:var(--sh);display:flex;align-items:center;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+        .journey-bar::-webkit-scrollbar{height:0;}
+        .j-stops{display:flex;align-items:center;gap:0;flex:1;min-width:0;}
+        .j-dot{width:24px;height:24px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:800;color:#fff;cursor:pointer;transition:all 0.3s;position:relative;z-index:2;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.12);}
+        .j-dot:hover{transform:scale(1.15);}
+        .j-dot.active{transform:scale(1.25);box-shadow:0 3px 12px rgba(0,0,0,0.2);}
+        .j-dot .j-tip{position:absolute;bottom:calc(100% + 6px);right:50%;transform:translateX(50%);background:var(--dark);color:#fff;padding:3px 8px;border-radius:5px;font-size:9px;font-weight:600;white-space:nowrap;opacity:0;transition:opacity 0.2s;pointer-events:none;}
         .j-dot:hover .j-tip,.j-dot.active .j-tip{opacity:1;}
-        .j-line{flex:1;height:3px;background:rgba(0,0,0,0.06);border-radius:2px;position:relative;}
+        .j-line{flex:1;height:2px;background:rgba(0,0,0,0.05);border-radius:2px;min-width:8px;position:relative;}
         .j-line-fill{position:absolute;top:0;right:0;height:100%;background:var(--gold);border-radius:2px;transition:width 0.6s;}
 
-        /* ══ INFO CARD (slide-in) ══ */
-        .info-overlay{
-            position:fixed;top:0;right:-460px;width:440px;height:100vh;z-index:2000;
-            transition:right 0.5s cubic-bezier(0.4,0,0.2,1);
-        }
+        /* ══ INFO CARD ══ */
+        .info-overlay{position:fixed;top:0;right:-100%;width:420px;max-width:100vw;height:100vh;height:100dvh;z-index:2000;transition:right 0.45s cubic-bezier(0.4,0,0.2,1);}
         .info-overlay.open{right:0;}
-        .info-backdrop{
-            position:fixed;inset:0;background:rgba(0,0,0,0.15);z-index:1999;
-            opacity:0;visibility:hidden;transition:all 0.4s;
-        }
+        .info-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.12);z-index:1999;opacity:0;visibility:hidden;transition:all 0.3s;}
         .info-backdrop.open{opacity:1;visibility:visible;}
-        .info-card{
-            width:100%;height:100%;background:var(--surface);
-            box-shadow:-8px 0 40px rgba(0,0,0,0.1);
-            overflow-y:auto;overflow-x:hidden;
-        }
-        .info-close{
-            position:absolute;top:16px;left:16px;z-index:10;
-            width:36px;height:36px;border-radius:50%;background:var(--glass);
-            border:1px solid var(--glass-border);display:flex;align-items:center;
-            justify-content:center;cursor:pointer;font-size:18px;color:var(--brand);
-            transition:all 0.3s;
-        }
-        .info-close:hover{background:#fff;border-color:var(--brand);}
-        .info-img{width:100%;height:220px;object-fit:cover;display:block;}
-        .info-zone-badge{
-            display:inline-flex;align-items:center;gap:5px;padding:5px 14px;
-            border-radius:16px;font-size:11px;font-weight:700;margin-bottom:12px;
-        }
-        .info-body{padding:24px 28px;}
-        .info-name{font-size:32px;font-weight:900;margin-bottom:4px;}
-        .info-en{font-size:14px;color:#aaa;margin-bottom:14px;direction:ltr;}
-        .info-desc{font-size:15px;color:#666;line-height:1.8;margin-bottom:18px;}
-        .info-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
-        .info-stat{background:var(--cream);border-radius:10px;padding:12px 14px;text-align:center;}
-        .is-val{font-size:22px;font-weight:900;direction:ltr;display:inline-block;}
-        .is-label{font-size:10px;color:#999;margin-top:2px;}
-        .info-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
-        .info-chip{padding:5px 12px;border-radius:8px;font-size:11px;font-weight:600;background:rgba(0,0,0,0.03);}
-        .info-price-box{
-            border-radius:12px;padding:16px 20px;margin-top:12px;
-            display:flex;align-items:center;gap:16px;
-        }
-        .ip-val{font-size:32px;font-weight:900;direction:ltr;display:inline-block;}
-        .ip-arrow{font-size:20px;opacity:0.3;}
-        .ip-unit{font-size:10px;color:#999;display:block;margin-top:2px;}
-        .info-nav{display:flex;gap:8px;padding:16px 28px;border-top:1px solid rgba(0,0,0,0.04);}
-        .info-nav-btn{
-            flex:1;padding:10px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);
-            background:#fff;font-family:'Tajawal';font-size:12px;font-weight:600;
-            cursor:pointer;text-align:center;transition:all 0.2s;color:var(--brand);
-        }
+        .info-card{width:100%;height:100%;background:var(--surface);box-shadow:-6px 0 32px rgba(0,0,0,0.08);overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+        .info-close{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--glass);backdrop-filter:blur(12px);border-bottom:1px solid rgba(0,0,0,0.04);}
+        .info-close-btn{width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,0.04);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--brand);transition:all 0.2s;}
+        .info-close-btn:hover{background:rgba(100,9,12,0.08);}
+        .info-close-zone{font-size:11px;font-weight:700;padding:4px 12px;border-radius:12px;}
+        .info-img{width:100%;height:200px;object-fit:cover;display:block;}
+        .info-body{padding:20px 22px 24px;}
+        .info-name{font-size:28px;font-weight:900;margin-bottom:2px;}
+        .info-en{font-size:13px;color:#aaa;margin-bottom:12px;direction:ltr;}
+
+        /* Card sections */
+        .info-section{margin-bottom:16px;}
+        .info-section-title{font-size:12px;font-weight:700;color:var(--gd);letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:5px;padding-bottom:4px;border-bottom:1px solid rgba(0,0,0,0.04);}
+        .info-desc{font-size:14px;color:#555;line-height:1.85;}
+        .info-bullets{list-style:none;padding:0;}
+        .info-bullets li{font-size:13px;color:#555;line-height:1.7;padding:2px 0;padding-right:14px;position:relative;}
+        .info-bullets li::before{content:'·';position:absolute;right:0;color:var(--gold);font-weight:900;font-size:18px;line-height:1.4;}
+        .info-quote{font-size:14px;color:var(--brand);font-weight:600;background:rgba(100,9,12,0.03);padding:10px 14px;border-radius:8px;border-right:3px solid var(--gold);line-height:1.7;}
+
+        /* Stats grid */
+        .info-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:8px;margin:10px 0;}
+        .info-stat{background:var(--cream);border-radius:10px;padding:10px 8px;text-align:center;}
+        .is-val{font-size:18px;font-weight:900;direction:ltr;display:inline-block;}
+        .is-label{font-size:9px;color:#999;margin-top:2px;}
+
+        /* Price box */
+        .info-price-box{border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+        .ip-val{font-size:28px;font-weight:900;direction:ltr;display:inline-block;}
+        .ip-arrow{font-size:18px;opacity:0.25;}
+        .ip-unit{font-size:9px;color:#999;display:block;margin-top:1px;}
+        .ip-roi{font-size:24px;font-weight:900;opacity:0.5;margin-right:auto;}
+
+        /* Chips */
+        .info-chips{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0;}
+        .info-chip{padding:4px 10px;border-radius:7px;font-size:10px;font-weight:600;background:rgba(0,0,0,0.03);}
+
+        /* Nav between cards */
+        .info-nav{display:flex;gap:6px;padding:14px 22px;border-top:1px solid rgba(0,0,0,0.04);}
+        .info-nav-btn{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(0,0,0,0.05);background:#fff;font-family:'Tajawal';font-size:11px;font-weight:600;cursor:pointer;text-align:center;transition:all 0.2s;color:var(--brand);}
         .info-nav-btn:hover{background:var(--sand);border-color:var(--gold);}
 
-        /* ══ STATS PANEL (top-left) ══ */
-        .stats-panel{
-            position:fixed;top:80px;right:16px;z-index:1000;
-            display:flex;gap:8px;
-        }
-        .sp-card{
-            background:var(--glass);backdrop-filter:blur(16px);
-            border:1px solid var(--glass-border);border-radius:12px;
-            padding:10px 16px;text-align:center;min-width:80px;
-            box-shadow:0 4px 16px rgba(0,0,0,0.04);
-        }
-        .sp-val{font-size:22px;font-weight:900;color:var(--brand);direction:ltr;display:inline-block;}
-        .sp-label{font-size:9px;color:#999;margin-top:2px;}
+        /* Pulse */
+        @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(156,5,18,0.25);}50%{box-shadow:0 0 0 10px rgba(156,5,18,0);}}
 
-        /* ══ CUSTOM MAP MARKERS ══ */
-        .map-node{
-            transition:transform 0.3s;cursor:pointer;
-        }
-        .map-node:hover{transform:scale(1.15);}
-        .node-dot{
-            width:32px;height:32px;border-radius:50%;
-            display:flex;align-items:center;justify-content:center;
-            font-size:11px;font-weight:800;color:#fff;
-            border:3px solid #fff;
-            box-shadow:0 3px 12px rgba(0,0,0,0.3);
-            transition:all 0.3s;
-        }
-        .node-dot.active{
-            width:40px;height:40px;font-size:13px;
-            box-shadow:0 4px 20px rgba(0,0,0,0.35);
-        }
-        .node-dot.key{width:36px;height:36px;font-size:12px;border-width:3px;}
-        .node-label{
-            background:rgba(255,255,255,0.94);border-radius:6px;
-            padding:4px 10px;box-shadow:0 2px 8px rgba(0,0,0,0.12);
-            border:1px solid rgba(0,0,0,0.06);white-space:nowrap;
-            font-size:12px;font-weight:700;line-height:1.3;
-            position:absolute;
-        }
-        .node-connector{
-            position:absolute;pointer-events:none;overflow:visible;
-        }
-
-        /* Pulse animation for active */
-        @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(156,5,18,0.3);}50%{box-shadow:0 0 0 12px rgba(156,5,18,0);}}
+        /* Map nodes */
+        .node-dot{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;border:2.5px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,0.25);transition:all 0.3s;cursor:pointer;}
         .node-dot.active{animation:pulse 2s infinite;}
+        .node-label{background:rgba(255,255,255,0.94);border-radius:5px;padding:3px 8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);border:1px solid rgba(0,0,0,0.05);white-space:nowrap;font-size:11px;font-weight:700;position:absolute;}
 
-        /* ══ SCROLLBAR ══ */
-        .info-card::-webkit-scrollbar{width:4px;}
+        /* Scrollbar */
+        .info-card::-webkit-scrollbar{width:3px;}
         .info-card::-webkit-scrollbar-track{background:transparent;}
-        .info-card::-webkit-scrollbar-thumb{background:var(--gold);border-radius:4px;}
+        .info-card::-webkit-scrollbar-thumb{background:var(--gold);border-radius:3px;}
+
+        /* ════════════════════════════════════
+           RESPONSIVE
+           ════════════════════════════════════ */
+        @media(max-width:768px){
+            .topbar{padding:6px 12px;flex-wrap:wrap;gap:6px;}
+            .topbar-stats{display:none;}
+            .topbar-title{font-size:14px;}
+            .topbar-sub{font-size:9px;}
+            .topbar-logo{height:28px;}
+            .btn-play{padding:7px 12px;font-size:11px;}
+            .legend-panel{bottom:8px;right:8px;padding:10px 12px;min-width:170px;max-width:45vw;}
+            .leg-row{font-size:9px;}
+            .journey-bar{right:185px;left:50px;bottom:8px;padding:8px 10px;}
+            .j-dot{width:20px;height:20px;font-size:6px;}
+            .zoom-ctrl{bottom:70px;left:8px;}
+            .zoom-btn{width:34px;height:34px;font-size:16px;}
+            .info-overlay{width:100vw;}
+            .info-img{height:160px;}
+            .info-body{padding:16px 18px 20px;}
+            .info-name{font-size:24px;}
+        }
+        @media(max-width:480px){
+            .topbar-left .btn-icon{display:none;}
+            .topbar{gap:4px;}
+            .legend-panel{display:none;}
+            .journey-bar{right:8px;left:8px;bottom:8px;}
+            .zoom-ctrl{bottom:60px;}
+            .info-name{font-size:22px;}
+            .info-img{height:140px;}
+            .info-stats{grid-template-columns:1fr 1fr;}
+        }
     </style>
 </head>
 <body>
@@ -237,451 +189,421 @@
             <div class="topbar-sub">ممر نمو غرب الرياض · من الإرث إلى الفرصة</div>
         </div>
     </div>
+    <div class="topbar-stats">
+        <div class="ts"><div class="ts-val">80+</div><div class="ts-label">كم</div></div>
+        <div class="ts"><div class="ts-val">15</div><div class="ts-label">موقع</div></div>
+        <div class="ts"><div class="ts-val">360</div><div class="ts-label">كم² القدية</div></div>
+        <div class="ts"><div class="ts-val">2034</div><div class="ts-label">كأس العالم</div></div>
+    </div>
     <div class="topbar-left">
-        <button class="btn btn-play" id="playBtn" onclick="toggleJourney()">
-            <span id="playIcon">▶</span> <span id="playText">تشغيل الرحلة</span>
-        </button>
+        <button class="btn btn-play" id="playBtn" onclick="toggleJourney()"><span id="playIcon">▶</span> <span id="playText">تشغيل الرحلة</span></button>
         <button class="btn btn-icon" onclick="resetView()" title="إعادة ضبط">⟳</button>
     </div>
 </div>
 
-<!-- ══ STATS PANEL ══ -->
-<div class="stats-panel">
-    <div class="sp-card"><div class="sp-val">80+</div><div class="sp-label">كم</div></div>
-    <div class="sp-card"><div class="sp-val">15</div><div class="sp-label">موقع</div></div>
-    <div class="sp-card"><div class="sp-val">360</div><div class="sp-label">كم² القدية</div></div>
-    <div class="sp-card"><div class="sp-val">2034</div><div class="sp-label">كأس العالم</div></div>
-</div>
-
-<!-- ══ MAP ══ -->
 <div id="map"></div>
 
-<!-- ══ ZOOM CONTROLS ══ -->
 <div class="zoom-ctrl">
     <button class="zoom-btn" onclick="map.zoomIn()">+</button>
     <button class="zoom-btn" onclick="map.zoomOut()">−</button>
 </div>
 
-<!-- ══ LEGEND PANEL ══ -->
 <div class="legend-panel" id="legendPanel">
-    <div class="leg-header" onclick="toggleLegend()">
-        <h4>🗺 دليل الخريطة</h4>
-        <button class="leg-toggle" id="legToggle">▼</button>
-    </div>
+    <div class="leg-header" onclick="toggleLegend()"><h4>🗺 دليل الخريطة</h4><button class="leg-toggle" id="legToggle">▼</button></div>
     <div class="leg-body" id="legBody">
-        <div class="leg-row"><span class="leg-dot" style="background:var(--brand)"></span>منطقة التراث (01–03)</div>
-        <div class="leg-row"><span class="leg-dot" style="background:var(--primary)"></span>منطقة التحول (04–06)</div>
-        <div class="leg-row"><span class="leg-dot" style="background:var(--gn)"></span>منطقة التوسع (07–11)</div>
-        <div class="leg-row"><span class="leg-dot" style="background:var(--gd)"></span>منطقة الفرص (12–15)</div>
-        <div style="height:6px;"></div>
+        <div class="leg-row"><span class="leg-dot" style="background:var(--brand)"></span>التراث (01–03)</div>
+        <div class="leg-row"><span class="leg-dot" style="background:var(--primary)"></span>التحول (04–06)</div>
+        <div class="leg-row"><span class="leg-dot" style="background:var(--gn)"></span>التوسع (07–11)</div>
+        <div class="leg-row"><span class="leg-dot" style="background:var(--gd)"></span>الفرص (12–15)</div>
+        <div style="height:4px;"></div>
         <div class="leg-row"><span class="leg-line" style="background:var(--primary)"></span>مسار الاستثمار</div>
         <div class="leg-row"><span class="leg-dash" style="border-color:var(--metro)"></span>خط المترو 7</div>
         <div class="leg-row"><span class="leg-dash" style="border-color:var(--dirab)"></span>محور ديراب 🐎</div>
-        <div class="leg-row"><span class="leg-dash" style="border-color:#888"></span>طرق رئيسية</div>
     </div>
 </div>
 
-<!-- ══ JOURNEY BAR ══ -->
-<div class="journey-bar" id="journeyBar"></div>
+<div class="journey-bar" id="journeyBar"><div class="j-stops" id="jStops"></div></div>
 
-<!-- ══ INFO CARD OVERLAY ══ -->
 <div class="info-backdrop" id="infoBg" onclick="closeInfo()"></div>
 <div class="info-overlay" id="infoPanel">
-    <div class="info-card" id="infoCard">
-        <button class="info-close" onclick="closeInfo()">✕</button>
-        <div id="infoContent"></div>
-    </div>
+    <div class="info-card" id="infoCard"></div>
 </div>
 
 <script>
     // ════════════════════════════════════════════
-    // DATA — All 15 locations + Dirab axis
+    // ENRICHED DATA
     // ════════════════════════════════════════════
-    const locations = [
+    const L_ = [
         {
-            id:1, num:'01', name:'الدرعية', en:'Diriyah', zone:'h', key:true, ldir:'right',
-            lat:24.7482194, lng:46.5363398, elev:'620م',
+            id:1,num:'01',name:'الدرعية',en:'Diriyah',zone:'h',key:true,ldir:'right',
+            lat:24.7482194,lng:46.5363398,elev:'620م',
             img:'https://assets-diriyah.diriyah.me/aedacdf96dc343aeb62ad421d60c0bc6?width=1080&quality=80&transform=true&format=webp',
-            desc:'موقع تراث عالمي لليونسكو. مهد المملكة العربية السعودية ورؤية 2030. حي الطريف التاريخي. بداية الممر الاستثماري من التراث إلى الفرصة.',
+            sections:[
+                {title:'الفكرة',icon:'💡',type:'quote',text:'مشروع بوابة الدرعية — أحد أهم المشاريع الثقافية والسياحية في العالم. يمثل نقطة انطلاق لرفع القيمة العقارية في غرب الرياض.'},
+                {title:'المعالم',icon:'📍',type:'bullets',items:['موقع تراث عالمي لليونسكو','حي الطريف التاريخي','مشروع بوابة الدرعية','رؤية 2030']},
+            ],
             chips:['🏛 يونسكو','🌿 وادي حنيفة','🍽 مطاعم','📍 620م'],
-            dist:'من الرياض: 20 كم · إلى القدية: 38 كم',
-            zoneName:'التراث', zoneIcon:'🏛'
+            dist:'من الرياض: 20 كم · إلى القدية: 38 كم',zoneName:'التراث',zoneIcon:'🏛'
         },
         {
-            id:2, num:'02', name:'العمارية', en:'Al Ammariyah', zone:'h', key:false, ldir:'top',
-            lat:24.7954674, lng:46.4272917, elev:'700م',
+            id:2,num:'02',name:'العمارية',en:'Al Ammariyah',zone:'h',key:false,ldir:'top',
+            lat:24.7954674,lng:46.4272917,elev:'700م',
             img:'https://www.naboo.app/_next/image?url=https%3A%2F%2Fwome-houses-prod.s3.eu-west-3.amazonaws.com%2FapbD1761124943196.png&w=828&q=75',
-            desc:'مزارع ومنتجعات فاخرة على هضبة طويق العليا. وجهة استجمام نخبوية ومنطقة ذات قيمة عالية.',
-            chips:['🌾 مزارع فاخرة','🏡 فلل','📍 700م'],
-            price:{old:'45',new:'1,500',unit:'ريال / م²',roi:'33×'},
-            dist:'من الرياض: 28 كم · إلى الدرعية: 12 كم',
-            zoneName:'التراث', zoneIcon:'✨'
+            sections:[
+                {title:'الموقع',icon:'📍',type:'text',text:'مرتبطة مباشرة بمشروع بوابة الدرعية.'},
+                {title:'المعالم',icon:'🏛',type:'bullets',items:['وادي حنيفة','حي السفارات','مناطق الاستراحات الفاخرة']},
+                {title:'الأرقام',icon:'📊',type:'price',old:'45',new:'1,000 — 1,500',unit:'ريال / م²',oldYear:'2012',roi:'نمو يتجاوز 30 ضعف'},
+                {title:'القراءة',icon:'📖',type:'quote',text:'العمارية تمثل مرحلة النضج.'}
+            ],
+            chips:['🌾 مزارع فاخرة','🏡 فلل','✨ نخبة','📍 700م'],
+            dist:'من الرياض: 28 كم · إلى الدرعية: 12 كم',zoneName:'التراث',zoneIcon:'✨'
         },
         {
-            id:3, num:'03', name:'جبل طويق', en:'Jabal Tuwaiq', zone:'h', key:false, ldir:'right',
-            lat:24.5590774, lng:46.4774098, elev:'800م',
+            id:3,num:'03',name:'جبل طويق',en:'Jabal Tuwaiq',zone:'h',key:false,ldir:'right',
+            lat:24.5590774,lng:46.4774098,elev:'800م',
             img:'https://saudipedia.com/var/site/storage/images/_aliases/gallery_slideshow_2x/8/7/4/0/4620478-1-eng-GB/731f31fe560f-69358.jpg.webp',
-            desc:'جرف صخري أيقوني — أعلى نقطة في الممر. انحدار دراماتيكي 200م نحو وادي القدية. رمز القوة السعودية.',
-            chips:['⛰ جرف صخري','📸 إطلالات بانورامية','📍 ~800م'],
+            sections:[
+                {title:'الفكرة',icon:'⛰',type:'quote',text:'جرف صخري أيقوني — أعلى نقطة في الممر. رمز القوة السعودية. انحدار دراماتيكي 200م نحو وادي القدية.'},
+            ],
             stats:[{v:'800م',l:'القمة'},{v:'200م',l:'الانحدار'}],
-            dist:'الانحدار: ~200م · إلى القدية: 14 كم',
-            zoneName:'التراث', zoneIcon:'⛰'
+            chips:['⛰ جرف صخري','📸 إطلالات بانورامية','📍 ~800م'],
+            dist:'الانحدار: ~200م · إلى القدية: 14 كم',zoneName:'التراث',zoneIcon:'⛰'
         },
         {
-            id:4, num:'04', name:'منحدر القدية', en:'Qiddiya Descent', zone:'t', key:false, ldir:'botright',
-            lat:24.5525, lng:46.4879167, elev:'680→460م',
+            id:4,num:'04',name:'منحدر القدية',en:'Qiddiya Descent',zone:'t',key:false,ldir:'botright',
+            lat:24.5525,lng:46.4879167,elev:'680←460م',
             img:'https://saudipedia.com/var/site/storage/images/_aliases/gallery_slideshow_2x/8/7/4/0/4620478-1-eng-GB/731f31fe560f-69358.jpg.webp',
-            desc:'نقطة الهبوط من الجرف — مدخل وادي القدية الدراماتيكي. انحدار حاد من 680م إلى 460م.',
+            sections:[{title:'الفكرة',icon:'⬇',type:'text',text:'نقطة الهبوط من الجرف — مدخل وادي القدية الدراماتيكي. انحدار حاد من 680م إلى 460م.'}],
             chips:['⬇ انحدار 220م','📍 680←460م'],
-            dist:'إلى القدية: 8 كم',
-            zoneName:'التحول', zoneIcon:'⬇'
+            dist:'إلى القدية: 8 كم',zoneName:'التحول',zoneIcon:'⬇'
         },
         {
-            id:5, num:'05', name:'قصور المقبل', en:'Al-Maqbel Palaces', zone:'t', key:false, ldir:'topleft',
-            lat:24.5171944, lng:46.3479167, elev:'620م',
+            id:5,num:'05',name:'قصور المقبل',en:'Al-Maqbel Palaces',zone:'t',key:false,ldir:'topleft',
+            lat:24.5171944,lng:46.3479167,elev:'620م',
             img:'https://thumbs.dreamstime.com/b/al-moqbel-palaces-near-riyadh-saudi-arabia-ksa-96319468.jpg',
-            desc:'مجمع قصور على حافة الهضبة. منطقة انتقالية نحو مشروع القدية العملاق.',
+            sections:[{title:'الفكرة',icon:'🏰',type:'text',text:'مجمع قصور على حافة الهضبة. منطقة انتقالية نحو مشروع القدية العملاق.'}],
             chips:['🏰 قصور','📍 620م'],
-            dist:'إلى القدية: 12 كم',
-            zoneName:'التحول', zoneIcon:'🏰'
+            dist:'إلى القدية: 12 كم',zoneName:'التحول',zoneIcon:'🏰'
         },
         {
-            id:6, num:'06', name:'مدينة القدية الترفيهية', en:'Qiddiya City', zone:'t', key:true, ldir:'top',
-            lat:24.5700893, lng:46.3100113, elev:'600م',
+            id:6,num:'06',name:'مدينة القدية الترفيهية',en:'Qiddiya City',zone:'t',key:true,ldir:'top',
+            lat:24.5700893,lng:46.3100113,elev:'600م',
             img:'https://upload.wikimedia.org/wikipedia/commons/2/21/Qiddiya_Illustration.png',
-            desc:'أول مدينة في العالم مبنية على قوة اللعب. سكس فلاقز افتُتحت ديسمبر 2025، حديقة أكواريبيا المائية، حلبة سبيد بارك للفورمولا 1، استاد الأمير محمد بن سلمان (46,000 مقعد). 40 دقيقة من الرياض.',
-            chips:['🎢 سكس فلاقز','💧 أكواريبيا','🏟 الاستاد','🏎 سبيد بارك','🎮 رياضات إلكترونية'],
-            stats:[{v:'360 كم²',l:'المساحة'},{v:'400+',l:'معلم'},{v:'48M',l:'زائر سنوياً'},{v:'2034',l:'كأس العالم'}],
-            dist:'40 كم من الرياض · خط المترو 7 مخطط 2026',
-            zoneName:'التحول', zoneIcon:'🎢'
+            sections:[
+                {title:'الفكرة',icon:'🎢',type:'quote',text:'مدينة القدية — أحد أكبر المشاريع الترفيهية في العالم. أول مدينة مبنية على قوة اللعب.'},
+                {title:'الأرقام الرئيسية',icon:'📊',type:'stats',items:[
+                        {v:'360+ كم²',l:'مساحة المشروع'},{v:'400+',l:'معلم ترفيهي'},{v:'275+',l:'لعبة'},
+                        {v:'12',l:'منطقة ترفيهية'},{v:'17M+',l:'زائر سنوياً'},{v:'2034',l:'كأس العالم'}
+                    ]},
+                {title:'المعالم الكبرى',icon:'🏟',type:'bullets',items:['أكبر مدينة ألعاب Six Flags في المنطقة','Aquarabia — أكبر مدينة مائية','استاد الأمير محمد بن سلمان — 46,000 مقعد','سبيد بارك — حلبة فورمولا 1','حي الألعاب والرياضات الإلكترونية']},
+                {title:'العارضية × القدية',icon:'🔗',type:'quote',text:'جزء من مخططات العارضية تم شراؤه من قبل شركة القدية ودخل ضمن نطاق المشروع. المخططات المتبقية تقع مباشرة على حدود المشروع.'}
+            ],
+            chips:['🎢 سكس فلاقز','💧 أكواريبيا','🏟 الاستاد','🏎 سبيد بارك','🎮 رياضات إلكترونية','🏟 كأس العالم 2034'],
+            dist:'40 كم من الرياض · خط المترو 7 مخطط 2026',zoneName:'التحول',zoneIcon:'🎢'
         },
         {
-            id:7, num:'07', name:'ضرماء', en:'Dhurma', zone:'e', key:false, ldir:'topright',
-            lat:24.5998333, lng:46.1345278, elev:'650م',
+            id:7,num:'07',name:'ضرماء',en:'Dhurma',zone:'e',key:false,ldir:'topright',
+            lat:24.5998333,lng:46.1345278,elev:'650م',
             img:'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2a/b9/25/44/caption.jpg?w=400&h=300&s=1',
-            desc:'بوابة تاريخية نحو التوسع الغربي للممر. امتداد طبيعي للنمو العمراني غرب الرياض.',
-            chips:['🏘 مركز بلدة','📍 650م'],
-            dist:'من الرياض: 65 كم',
-            zoneName:'التوسع', zoneIcon:'🌿'
+            sections:[
+                {title:'الموقع',icon:'📍',type:'text',text:'ضمن نطاق التأثير المباشر للقدية.'},
+                {title:'المعالم',icon:'🏛',type:'bullets',items:['مدينة القدية','Six Flags','Aquarabia','مناطق ترفيهية ورياضية']},
+                {title:'الأرقام',icon:'📊',type:'price',old:'8',new:'150 — 200',unit:'ريال / م²',oldYear:'2008',roi:'نمو يصل إلى 20 ضعف'},
+                {title:'القراءة',icon:'📖',type:'quote',text:'ضرماء اليوم تشبه العمارية قبل سنوات.'}
+            ],
+            chips:['🏘 مركز بلدة','📍 650م','🎢 قرب القدية'],
+            dist:'من الرياض: 65 كم',zoneName:'التوسع',zoneIcon:'🌿'
         },
         {
-            id:8, num:'08', name:'المزاحمية', en:'Al Muzahimiyah', zone:'e', key:false, ldir:'botright',
-            lat:24.4725109, lng:46.2877854, elev:'640م',
+            id:8,num:'08',name:'المزاحمية',en:'Al Muzahimiyah',zone:'e',key:false,ldir:'botright',
+            lat:24.4725109,lng:46.2877854,elev:'640م',
             img:'https://upload.wikimedia.org/wikipedia/commons/c/c1/The_Main_Street_in_Al-Muzahimiyah_%28HDR%29_%283312344154%29.jpg',
-            desc:'محافظة رئيسية. بوابة على محور الرياض–مكة المكرمة. منطقة توسع عمراني نشطة.',
-            chips:['🛒 خدمات','📍 640م'],
-            price:{old:'15',new:'200',unit:'ريال / م²',roi:'13×'},
-            dist:'من الرياض: 70 كم',
-            zoneName:'التوسع', zoneIcon:'🌾'
+            sections:[
+                {title:'الموقع',icon:'📍',type:'text',text:'على طريق الرياض – مكة المكرمة.'},
+                {title:'المعالم',icon:'🏛',type:'bullets',items:['القرب من مدينة القدية','فرع جامعة الملك سعود بالمزاحمية','خدمات حكومية وتعليمية']},
+                {title:'الأرقام',icon:'📊',type:'price',old:'15',new:'200',unit:'ريال / م²',oldYear:'2007',roi:'نمو يتجاوز 13 ضعف'},
+                {title:'القراءة',icon:'📖',type:'quote',text:'منطقة توازن بين النمو والاستقرار.'}
+            ],
+            chips:['🛒 خدمات','📍 640م','🎓 جامعة'],
+            dist:'من الرياض: 70 كم',zoneName:'التوسع',zoneIcon:'🌾'
         },
         {
-            id:9, num:'09', name:'مخططات زهرة الربيع', en:'Zahrat Al-Rabee', zone:'e', key:false, ldir:'topleft',
-            lat:24.5053113, lng:45.9982314, elev:'630م',
+            id:9,num:'09',name:'مخططات زهرة الربيع',en:'Zahrat Al-Rabee',zone:'e',key:false,ldir:'topleft',
+            lat:24.5053113,lng:45.9982314,elev:'630م',
             img:'https://lh3.googleusercontent.com/gps-cs-s/AHVAweqWrJhz35MChq5MoE7DzI48xCWwnYys34PAYc0XRbNdfFi52EuiYYiqxzd72Li85p91hDJt5Emj6cRzN_T0tXuXdhbeP-PLDPNhw34P4nctx_Atj-1PQinyLBec5wIzxWO16npFQg=w408-h544-k-no',
-            desc:'المرحلة 1 و2. جبهة التوسع العمراني الجديدة غرب الرياض.',
+            sections:[{title:'الفكرة',icon:'🏗',type:'text',text:'المرحلة 1 و2. جبهة التوسع العمراني الجديدة غرب الرياض.'}],
             chips:['🏗 المرحلة 1 و2','📍 630م'],
-            dist:'من الرياض: 78 كم',
-            zoneName:'التوسع', zoneIcon:'🏗'
+            dist:'من الرياض: 78 كم',zoneName:'التوسع',zoneIcon:'🏗'
         },
         {
-            id:10, num:'10', name:'طريق الرياض - مكة المكرمة السريع', en:'Riyadh-Makkah Highway', zone:'e', key:false, ldir:'bottom',
-            lat:24.5021111, lng:46.3391111, elev:'620م',
+            id:10,num:'10',name:'طريق الرياض - مكة المكرمة السريع',en:'Riyadh-Makkah Highway',zone:'e',key:false,ldir:'bottom',
+            lat:24.5021111,lng:46.3391111,elev:'620م',
             img:'https://media.gettyimages.com/id/117333082/photo/riyadh-to-makkah-road-through-tuwaiq-mountains.jpg?s=1024x1024&w=gi&k=20&c=VEJ_y62xT0GdbYHXSXKz0BAKInfZrJIqgfZ_l-aek4s=',
-            desc:'الطريق السريع الرئيسي الرابط بين العاصمة والمنطقة الغربية. شريان حيوي يعزز قيمة الممر.',
+            sections:[{title:'الفكرة',icon:'🛣',type:'text',text:'الطريق السريع الرئيسي الرابط بين العاصمة والمنطقة الغربية. شريان حيوي يعزز قيمة الممر.'}],
             chips:['🛣 طريق سريع','📍 620م'],
-            dist:'يربط: الرياض ← مكة المكرمة',
-            zoneName:'التوسع', zoneIcon:'🛣'
+            dist:'يربط: الرياض ← مكة المكرمة',zoneName:'التوسع',zoneIcon:'🛣'
         },
         {
-            id:11, num:'11', name:'طريق مرات - شقراء - الدوادمي', en:'Marat-Shaqra-Dawadmi Rd', zone:'e', key:false, ldir:'top',
-            lat:24.6285833, lng:46.0711667, elev:'620م',
+            id:11,num:'11',name:'طريق مرات - شقراء - الدوادمي',en:'Marat Road',zone:'e',key:false,ldir:'top',
+            lat:24.6285833,lng:46.0711667,elev:'620م',
             img:'https://i.ibb.co/JRXHtd5n/Al-Khalayiq-Road.png',
-            desc:'شريان إقليمي يربط الممر بوسط الجزيرة العربية. ممر التوسع الغربي.',
+            sections:[{title:'الفكرة',icon:'🛣',type:'text',text:'شريان إقليمي يربط الممر بوسط الجزيرة العربية. ممر التوسع الغربي.'}],
             chips:['🛣 إقليمي','📍 620م'],
-            dist:'يربط: مرات · شقراء · الدوادمي',
-            zoneName:'التوسع', zoneIcon:'🛣'
+            dist:'يربط: مرات · شقراء · الدوادمي',zoneName:'التوسع',zoneIcon:'🛣'
         },
         {
-            id:12, num:'12', name:'طريق الخلايق', en:'Al-Khalayiq Road', zone:'o', key:false, ldir:'left',
-            lat:24.3409444, lng:45.8051389, elev:'600م',
+            id:12,num:'12',name:'طريق الخلايق',en:'Al-Khalayiq Road',zone:'o',key:false,ldir:'left',
+            lat:24.3409444,lng:45.8051389,elev:'600م',
             img:'https://i.ibb.co/JRXHtd5n/Al-Khalayiq-Road.png',
-            desc:'طريق مباشر إلى الجلة من الممر. الوصلة الرئيسية بين ممر التوسع والوجهة الاستثمارية النهائية.',
+            sections:[{title:'الفكرة',icon:'🛣',type:'text',text:'طريق مباشر إلى الجلة. الوصلة الرئيسية بين ممر التوسع والوجهة الاستثمارية النهائية.'}],
             chips:['🛣 وصول مباشر','📍 600م','← الجلة'],
-            dist:'إلى الجلة: 12 كم',
-            zoneName:'الفرص', zoneIcon:'🛣'
+            dist:'إلى الجلة: 12 كم',zoneName:'الفرص',zoneIcon:'🛣'
         },
         {
-            id:13, num:'13', name:'مخططات العارضية', en:'Al Aridhiyah (Um Al-Khair)', zone:'o', key:false, ldir:'right',
-            lat:24.6207778, lng:46.1773611, elev:'615م',
+            id:13,num:'13',name:'مخططات العارضية',en:'Al Aridhiyah (Um Al-Khair)',zone:'o',key:false,ldir:'right',
+            lat:24.6207778,lng:46.1773611,elev:'615م',
             img:'https://i.ibb.co/BVtVzjsg/Al-Ardiyah.png',
-            desc:'مؤشر الاستثمار في الممر. سوق منظم وفرص مستقرة. مخططات العارضية ( أ ، ب ، ج ، د ، و ).',
+            sections:[
+                {title:'الموقع',icon:'📍',type:'text',text:'سوق منظم وفرص مستقرة. مخططات العارضية ( أ ، ب ، ج ، د ، و ).'},
+                {title:'العارضية × القدية',icon:'🔗',type:'quote',text:'جزء من مخططات العارضية تم شراؤه من قبل شركة القدية ودخل ضمن نطاق المشروع. المخططات المتبقية تقع مباشرة على حدود المشروع.'},
+                {title:'الأرقام',icon:'📊',type:'price',old:'8',new:'200',unit:'ريال / م²',oldYear:'2008',roi:'نمو 20 ضعف'},
+            ],
             chips:['💰 استثمار','📍 615م','🛣 طريق سريع'],
-            price:{old:'8',new:'200',unit:'ريال / م²',roi:'20×'},
-            dist:'وصول طريق سريع',
-            zoneName:'الفرص', zoneIcon:'💰'
+            dist:'وصول طريق سريع',zoneName:'الفرص',zoneIcon:'💰'
         },
         {
-            id:14, num:'14', name:'الجلة', en:'Al Jella — Final Destination', zone:'o', key:true, ldir:'botright',
-            lat:24.3467778, lng:45.8338056, elev:'585م',
+            id:14,num:'14',name:'الجلة',en:'Al Jella — Final Destination',zone:'o',key:true,ldir:'botright',
+            lat:24.3467778,lng:45.8338056,elev:'585م',
             img:'https://i.ibb.co/pjJC6yCM/Al-Jella.png',
-            desc:'نهاية ممر نمو غرب الرياض. أرض بأسعار استثمارية مميزة على المسار. الوجهة النهائية — بداية الفرصة الحقيقية.',
+            sections:[
+                {title:'الموقع',icon:'📍',type:'text',text:'قريبة من طريق الرياض – مكة المكرمة.'},
+                {title:'المعالم',icon:'🏛',type:'bullets',items:['امتداد المشاريع','مناطق زراعية']},
+                {title:'الأرقام',icon:'📊',type:'price',old:'8',new:'17 — 40',unit:'ريال / م²',oldYear:'2013',roi:'نمو 5×'},
+                {title:'القراءة',icon:'📖',type:'quote',text:'أقل تكلفة دخول وأعلى اعتماد على الزمن.'}
+            ],
             chips:['🏁 نهاية الممر','📍 585م','~80 كم من الرياض'],
-            price:{old:'8',new:'40',unit:'ريال / م²',roi:'5×'},
-            dist:'~80 كم من الرياض',
-            zoneName:'الفرص', zoneIcon:'🏁'
+            dist:'~80 كم من الرياض',zoneName:'الفرص',zoneIcon:'🏁'
         },
         {
-            id:15, num:'15', name:'مخططات الجلة', en:'Al Jella Plans', zone:'o', key:false, ldir:'left',
-            lat:24.49525, lng:45.7273889, elev:'580م',
+            id:15,num:'15',name:'مخططات الجلة',en:'Al Jella Plans',zone:'o',key:false,ldir:'left',
+            lat:24.49525,lng:45.7273889,elev:'580م',
             img:'https://i.ibb.co/VYmwcM6g/plan-521.png',
-            desc:'تخطيط الأراضي ومناطق البيع. المخططات المتاحة للاستثمار في الجلة.',
+            sections:[{title:'الفكرة',icon:'📋',type:'text',text:'تخطيط الأراضي ومناطق البيع. المخططات المتاحة للاستثمار في الجلة.'}],
             chips:['📋 مخططات','📍 580م'],
-            dist:'مناطق البيع المتاحة',
-            zoneName:'الفرص', zoneIcon:'📋'
+            dist:'مناطق البيع المتاحة',zoneName:'الفرص',zoneIcon:'📋'
         }
     ];
 
-    const zoneColors = {h:'#64090c',t:'#9c0512',e:'#1A5C2A',o:'#8B6914'};
-    const zoneBgs = {h:'rgba(100,9,12,0.06)',t:'rgba(156,5,18,0.06)',e:'rgba(26,92,42,0.06)',o:'rgba(139,105,20,0.06)'};
-    const zoneNames = {h:'التراث',t:'التحول',e:'التوسع',o:'الفرص'};
+    // Dirab data (separate - not part of main corridor)
+    const dirabData = {
+        name:'محور ديراب',en:'Derab Axis',
+        sections:[
+            {title:'الموقع',icon:'📍',type:'text',text:'جنوب غرب الرياض.'},
+            {title:'المعالم',icon:'🐎',type:'bullets',items:['مركز الملك عبدالعزيز للخيل العربية الأصيلة','تسجيل السلالات','أنشطة الفروسية']},
+            {title:'القيمة',icon:'💎',type:'quote',text:'بيئة استثمار نوعي مرتبطة بنمط الحياة. تراث وثقافة وهوية.'}
+        ],
+        chips:['🐎 خيل عربية','🏛 تراث','🎭 ثقافة','📍 طريق ديراب']
+    };
+
+    const zC = {h:'#64090c',t:'#9c0512',e:'#1A5C2A',o:'#8B6914'};
+    const zBg = {h:'rgba(100,9,12,0.05)',t:'rgba(156,5,18,0.05)',e:'rgba(26,92,42,0.05)',o:'rgba(139,105,20,0.05)'};
 
     // ════════════════════════════════════════════
     // MAP INIT
     // ════════════════════════════════════════════
-    const map = L.map('map',{
-        zoomControl:false,attributionControl:false,
-        minZoom:9,maxZoom:15
-    });
-
-    L.tileLayer('https://mt{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',{
-        subdomains:['0','1','2','3'],maxZoom:20
-    }).addTo(map);
-
-    const bounds = L.latLngBounds(locations.map(l=>[l.lat,l.lng]));
+    const map = L.map('map',{zoomControl:false,attributionControl:false,minZoom:9,maxZoom:15});
+    L.tileLayer('https://mt{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',{subdomains:['0','1','2','3'],maxZoom:20}).addTo(map);
+    const bounds = L.latLngBounds(L_.map(l=>[l.lat,l.lng]));
     map.fitBounds(bounds.pad(0.08));
 
-    // ── Zone polygons ──
-    [
-        {coords:[[24.54,46.40],[24.83,46.40],[24.83,46.60],[24.54,46.60]],c:'#64090c'},
-        {coords:[[24.48,46.22],[24.63,46.22],[24.63,46.55],[24.48,46.55]],c:'#9c0512'},
-        {coords:[[24.42,45.90],[24.66,45.90],[24.66,46.33],[24.42,46.33]],c:'#2d8a4e'},
-        {coords:[[24.28,45.68],[24.50,45.68],[24.50,45.91],[24.28,45.91]],c:'#8B6914'},
-    ].forEach(z=>L.polygon(z.coords,{color:z.c,weight:1.5,opacity:.3,fillColor:z.c,fillOpacity:.05}).addTo(map));
+    // Zones
+    [{c:[[24.54,46.40],[24.83,46.40],[24.83,46.60],[24.54,46.60]],cl:'#64090c'},
+        {c:[[24.48,46.22],[24.63,46.22],[24.63,46.55],[24.48,46.55]],cl:'#9c0512'},
+        {c:[[24.42,45.90],[24.66,45.90],[24.66,46.33],[24.42,46.33]],cl:'#2d8a4e'},
+        {c:[[24.28,45.68],[24.50,45.68],[24.50,45.91],[24.28,45.91]],cl:'#8B6914'}
+    ].forEach(z=>L.polygon(z.c,{color:z.cl,weight:1.5,opacity:.25,fillColor:z.cl,fillOpacity:.04}).addTo(map));
 
-    // ── Route polyline ──
-    const routeCoords = locations.map(l=>[l.lat,l.lng]);
-    L.polyline(routeCoords,{color:'#9c0512',weight:4,opacity:.45,dashArray:'14,8'}).addTo(map);
+    // Route
+    L.polyline(L_.map(l=>[l.lat,l.lng]),{color:'#9c0512',weight:4,opacity:.4,dashArray:'14,8'}).addTo(map);
+    // Metro
+    L.polyline([[24.748,46.536],[24.718,46.484],[24.648,46.416],[24.598,46.365],[24.572,46.312]],{color:'#1a6b8a',weight:3.5,opacity:.45,dashArray:'14,7'}).addTo(map);
+    // Dirab
+    L.polyline([[24.530,46.42],[24.510,46.41],[24.495,46.405],[24.481,46.399]],{color:'#5B7B6A',weight:2.5,opacity:.3,dashArray:'10,6'}).addTo(map);
 
-    // ── Metro Line 7 ──
-    L.polyline([[24.748,46.536],[24.718,46.484],[24.648,46.416],[24.598,46.365],[24.572,46.312]],{color:'#1a6b8a',weight:4,opacity:.5,dashArray:'16,7'}).addTo(map);
-
-    // ── Dirab axis ──
-    L.polyline([[24.530,46.42],[24.510,46.41],[24.495,46.405],[24.481,46.399]],{color:'#5B7B6A',weight:3,opacity:.35,dashArray:'10,6'}).addTo(map);
-    const dirabIcon = L.divIcon({
-        html:`<div style="position:relative;width:0;height:0;">
-    <div style="position:absolute;left:-16px;top:-16px;width:32px;height:32px;background:rgba(91,123,106,0.9);border-radius:50%;border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 3px 12px rgba(0,0,0,0.3);cursor:pointer;">🐎</div>
-    <div style="position:absolute;left:22px;top:-14px;background:rgba(255,255,255,0.94);border-radius:6px;padding:4px 10px;box-shadow:0 2px 8px rgba(0,0,0,0.12);border:1px solid rgba(91,123,106,0.15);white-space:nowrap;">
-      <div style="font-family:Tajawal;font-size:11px;font-weight:700;color:#3D5A4A;">🐎 مركز الخيل العربية</div>
-      <div style="font-family:Tajawal;font-size:9px;color:#999;">محور ديراب</div>
+    // Dirab marker
+    const dIcon = L.divIcon({
+        html:`<div style="position:relative;width:0;height:0;cursor:pointer;" onclick="openDirab()">
+    <div style="position:absolute;left:-14px;top:-14px;width:28px;height:28px;background:rgba(91,123,106,0.9);border-radius:50%;border:2.5px solid #fff;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 3px 10px rgba(0,0,0,0.25);">🐎</div>
+    <div style="position:absolute;left:20px;top:-12px;background:rgba(255,255,255,0.94);border-radius:5px;padding:3px 8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);border:1px solid rgba(91,123,106,0.12);white-space:nowrap;">
+      <div style="font-family:Tajawal;font-size:10px;font-weight:700;color:#3D5A4A;">🐎 محور ديراب</div>
     </div>
-  </div>`,
-        className:'',iconSize:[1,1],iconAnchor:[0,0]
+  </div>`,className:'',iconSize:[1,1],iconAnchor:[0,0]
     });
-    L.marker([24.480924,46.398655],{icon:dirabIcon}).addTo(map);
+    L.marker([24.480924,46.398655],{icon:dIcon}).addTo(map);
 
-    // ════════════════════════════════════════════
-    // MARKERS
-    // ════════════════════════════════════════════
-    const markers = [];
-
-    locations.forEach((loc,i)=>{
-        const c = zoneColors[loc.zone];
-        const s = loc.key ? 36 : 30;
-        const gap = 12;
-        const w = loc.name.length * 8 + 18;
-        const h = 24, hy = h/2;
+    // ── Markers ──
+    L_.forEach((loc,i)=>{
+        const c=zC[loc.zone],s=loc.key?34:28,gap=11;
+        const w=loc.name.length*7.5+16,h=22,hy=h/2;
         let lx,ly;
         switch(loc.ldir){
-            case'right':lx=s/2+gap;ly=-hy;break;
-            case'left':lx=-(s/2+gap+w);ly=-hy;break;
-            case'top':lx=-(w/2);ly=-(s/2+gap+h);break;
-            case'bottom':lx=-(w/2);ly=s/2+gap;break;
-            case'topleft':lx=-(w+gap);ly=-(s/2+gap+h);break;
-            case'topright':lx=s/2+gap;ly=-(s/2+gap+h);break;
-            case'botleft':lx=-(w+gap);ly=s/2+gap;break;
-            case'botright':lx=s/2+gap;ly=s/2+gap;break;
+            case'right':lx=s/2+gap;ly=-hy;break;case'left':lx=-(s/2+gap+w);ly=-hy;break;
+            case'top':lx=-(w/2);ly=-(s/2+gap+h);break;case'bottom':lx=-(w/2);ly=s/2+gap;break;
+            case'topleft':lx=-(w+gap);ly=-(s/2+gap+h);break;case'topright':lx=s/2+gap;ly=-(s/2+gap+h);break;
+            case'botleft':lx=-(w+gap);ly=s/2+gap;break;case'botright':lx=s/2+gap;ly=s/2+gap;break;
             default:lx=s/2+gap;ly=-hy;
         }
-        const clx=lx+w/2, cly=ly+hy;
-
-        const icon = L.divIcon({
-            html:`<div class="map-node" onclick="openInfo(${i})" style="position:relative;width:0;height:0;">
-      <svg class="node-connector" style="position:absolute;left:${Math.min(0,clx)-5}px;top:${Math.min(0,cly)-5}px;width:${Math.abs(clx)+w}px;height:${Math.abs(cly)+h}px;overflow:visible;">
-        <line x1="${-Math.min(0,clx)+5}" y1="${-Math.min(0,cly)+5}" x2="${clx-Math.min(0,clx)+5}" y2="${cly-Math.min(0,cly)+5}" stroke="${c}" stroke-width="1" stroke-opacity="0.18" stroke-dasharray="3,3"/>
+        const clx=lx+w/2,cly=ly+hy;
+        const icon=L.divIcon({
+            html:`<div style="position:relative;width:0;height:0;cursor:pointer;" onclick="openInfo(${i})">
+      <svg style="position:absolute;left:${Math.min(0,clx)-5}px;top:${Math.min(0,cly)-5}px;width:${Math.abs(clx)+w}px;height:${Math.abs(cly)+h}px;overflow:visible;pointer-events:none;">
+        <line x1="${-Math.min(0,clx)+5}" y1="${-Math.min(0,cly)+5}" x2="${clx-Math.min(0,clx)+5}" y2="${cly-Math.min(0,cly)+5}" stroke="${c}" stroke-width="1" stroke-opacity="0.15" stroke-dasharray="3,3"/>
       </svg>
-      <div class="node-dot ${loc.key?'key':''}" id="dot-${i}" style="position:absolute;left:${-s/2}px;top:${-s/2}px;width:${s}px;height:${s}px;background:${c};">${loc.num}</div>
+      <div class="node-dot ${loc.key?'key':''}" id="dot-${i}" style="position:absolute;left:${-s/2}px;top:${-s/2}px;width:${s}px;height:${s}px;background:${c};font-size:${loc.key?11:9}px;">${loc.num}</div>
       <div class="node-label" style="left:${lx}px;top:${ly}px;color:${c};">${loc.name}</div>
-    </div>`,
-            className:'',iconSize:[1,1],iconAnchor:[0,0]
+    </div>`,className:'',iconSize:[1,1],iconAnchor:[0,0]
         });
-        const m = L.marker([loc.lat,loc.lng],{icon}).addTo(map);
-        markers.push(m);
+        L.marker([loc.lat,loc.lng],{icon}).addTo(map);
     });
 
     // ════════════════════════════════════════════
-    // INFO CARD
+    // INFO CARD RENDERER
     // ════════════════════════════════════════════
-    let currentInfo = -1;
+    let currentInfo=-1;
+
+    function renderSections(sections,c){
+        let html='';
+        sections.forEach(s=>{
+            html+=`<div class="info-section"><div class="info-section-title">${s.icon} ${s.title}</div>`;
+            if(s.type==='text') html+=`<div class="info-desc">${s.text}</div>`;
+            else if(s.type==='quote') html+=`<div class="info-quote">${s.text}</div>`;
+            else if(s.type==='bullets'){
+                html+=`<ul class="info-bullets">`;
+                s.items.forEach(it=>{html+=`<li>${it}</li>`;});
+                html+=`</ul>`;
+            }
+            else if(s.type==='price'){
+                html+=`<div class="info-price-box" style="background:${zBg[currentLoc().zone]};">
+        <div><div class="ip-val" style="color:#bbb;">${s.old}</div><div class="ip-unit">${s.oldYear||'سابقاً'}</div></div>
+        <div class="ip-arrow">←</div>
+        <div><div class="ip-val" style="color:${c};">${s.new}</div><div class="ip-unit">اليوم</div></div>
+        ${s.roi?`<div class="ip-roi" style="color:${c};">${s.roi}</div>`:''}
+      </div><div style="text-align:center;font-size:10px;color:#bbb;margin-top:2px;">${s.unit||'ريال / م²'}</div>`;
+            }
+            else if(s.type==='stats'){
+                html+=`<div class="info-stats">`;
+                s.items.forEach(st=>{html+=`<div class="info-stat"><div class="is-val" style="color:${c};">${st.v}</div><div class="is-label">${st.l}</div></div>`;});
+                html+=`</div>`;
+            }
+            html+=`</div>`;
+        });
+        return html;
+    }
+
+    function currentLoc(){return L_[currentInfo];}
 
     function openInfo(idx){
-        currentInfo = idx;
-        const loc = locations[idx];
-        const c = zoneColors[loc.zone];
-        const bg = zoneBgs[loc.zone];
-
-        let html = `<img class="info-img" src="${loc.img}" alt="${loc.name}" onerror="this.style.background='var(--cream)';this.style.height='120px';">`;
-        html += `<div class="info-body">`;
-        html += `<div class="info-zone-badge" style="background:${bg};color:${c};">${loc.zoneIcon} ${loc.num} · ${loc.zoneName}</div>`;
-        html += `<div class="info-name" style="color:${c};">${loc.name}</div>`;
-        html += `<div class="info-en">${loc.en}</div>`;
-        html += `<div class="info-desc">${loc.desc}</div>`;
-
+        currentInfo=idx;
+        const loc=L_[idx],c=zC[loc.zone],bg=zBg[loc.zone];
+        let h=`<div class="info-close"><button class="info-close-btn" onclick="closeInfo()">✕</button><div class="info-close-zone" style="background:${bg};color:${c};">${loc.zoneIcon} ${loc.num} · ${loc.zoneName}</div></div>`;
+        h+=`<img class="info-img" src="${loc.img}" alt="${loc.name}" onerror="this.style.background='var(--cream)';this.style.height='100px';">`;
+        h+=`<div class="info-body">`;
+        h+=`<div class="info-name" style="color:${c};">${loc.name}</div>`;
+        h+=`<div class="info-en">${loc.en}</div>`;
+        if(loc.sections) h+=renderSections(loc.sections,c);
         if(loc.stats){
-            html += `<div class="info-stats">`;
-            loc.stats.forEach(s=>{html+=`<div class="info-stat"><div class="is-val" style="color:${c};">${s.v}</div><div class="is-label">${s.l}</div></div>`;});
-            html += `</div>`;
+            h+=`<div class="info-stats">`;
+            loc.stats.forEach(s=>{h+=`<div class="info-stat"><div class="is-val" style="color:${c};">${s.v}</div><div class="is-label">${s.l}</div></div>`;});
+            h+=`</div>`;
         }
-
-        if(loc.price){
-            html += `<div class="info-price-box" style="background:${bg};">
-      <div><div class="ip-val" style="color:var(--text-light);">${loc.price.old}</div><div class="ip-unit">سابقاً</div></div>
-      <div class="ip-arrow">←</div>
-      <div><div class="ip-val" style="color:${c};">${loc.price.new}</div><div class="ip-unit">اليوم</div></div>
-      <div style="margin-right:auto;"><div style="font-size:28px;font-weight:900;color:${c};opacity:0.6;">${loc.price.roi}</div><div class="ip-unit">نمو</div></div>
-    </div>`;
-            html += `<div style="text-align:center;font-size:11px;color:var(--text-light);margin-top:4px;">${loc.price.unit}</div>`;
-        }
-
-        html += `<div class="info-chips">`;
-        loc.chips.forEach(ch=>{html+=`<div class="info-chip">${ch}</div>`;});
-        html += `</div>`;
-
-        html += `<div style="font-size:12px;color:var(--text-light);margin-top:8px;">${loc.dist}</div>`;
-        html += `<div style="font-size:11px;color:var(--text-light);margin-top:4px;">الارتفاع: ${loc.elev}</div>`;
-        html += `</div>`;
-
-        html += `<div class="info-nav">`;
-        if(idx>0) html+=`<button class="info-nav-btn" onclick="openInfo(${idx-1})">→ ${locations[idx-1].name}</button>`;
-        if(idx<locations.length-1) html+=`<button class="info-nav-btn" onclick="openInfo(${idx+1})">${locations[idx+1].name} ←</button>`;
-        html += `</div>`;
-
-        document.getElementById('infoContent').innerHTML = html;
+        h+=`<div class="info-chips">`;
+        loc.chips.forEach(ch=>{h+=`<div class="info-chip">${ch}</div>`;});
+        h+=`</div>`;
+        h+=`<div style="font-size:11px;color:#aaa;margin-top:8px;">${loc.dist}</div>`;
+        h+=`<div style="font-size:10px;color:#ccc;margin-top:3px;">الارتفاع: ${loc.elev}</div>`;
+        h+=`</div>`;
+        h+=`<div class="info-nav">`;
+        if(idx>0) h+=`<button class="info-nav-btn" onclick="openInfo(${idx-1})">→ ${L_[idx-1].name}</button>`;
+        if(idx<L_.length-1) h+=`<button class="info-nav-btn" onclick="openInfo(${idx+1})">${L_[idx+1].name} ←</button>`;
+        h+=`</div>`;
+        document.getElementById('infoCard').innerHTML=h;
         document.getElementById('infoPanel').classList.add('open');
         document.getElementById('infoBg').classList.add('open');
-
-        // Highlight dot
         document.querySelectorAll('.node-dot').forEach(d=>d.classList.remove('active'));
-        const dot = document.getElementById('dot-'+idx);
+        const dot=document.getElementById('dot-'+idx);
         if(dot) dot.classList.add('active');
-
-        // Fly to
         map.flyTo([loc.lat,loc.lng],12,{duration:1});
-
         updateJourneyDots(idx);
+    }
+
+    function openDirab(){
+        const d=dirabData,c='#5B7B6A';
+        currentInfo=-2;
+        let h=`<div class="info-close"><button class="info-close-btn" onclick="closeInfo()">✕</button><div class="info-close-zone" style="background:rgba(91,123,106,0.06);color:${c};">🐎 محور مستقل</div></div>`;
+        h+=`<div style="height:180px;background:linear-gradient(135deg,#e8f0ec,#d0e0d4);display:flex;align-items:center;justify-content:center;font-size:80px;opacity:0.2;">🐎</div>`;
+        h+=`<div class="info-body"><div class="info-name" style="color:${c};">${d.name}</div><div class="info-en">${d.en}</div>`;
+        h+=renderSections(d.sections,c);
+        h+=`<div class="info-chips">`;
+        d.chips.forEach(ch=>{h+=`<div class="info-chip">${ch}</div>`;});
+        h+=`</div></div>`;
+        document.getElementById('infoCard').innerHTML=h;
+        document.getElementById('infoPanel').classList.add('open');
+        document.getElementById('infoBg').classList.add('open');
+        map.flyTo([24.480924,46.398655],12,{duration:1});
     }
 
     function closeInfo(){
         document.getElementById('infoPanel').classList.remove('open');
         document.getElementById('infoBg').classList.remove('open');
         document.querySelectorAll('.node-dot').forEach(d=>d.classList.remove('active'));
-        currentInfo = -1;
+        currentInfo=-1;
     }
 
     // ════════════════════════════════════════════
     // JOURNEY BAR
     // ════════════════════════════════════════════
     function buildJourneyBar(){
-        const bar = document.getElementById('journeyBar');
-        let html = '';
-        locations.forEach((loc,i)=>{
-            const c = zoneColors[loc.zone];
-            html += `<div class="j-dot" id="jdot-${i}" style="background:${c};" onclick="openInfo(${i})">${loc.num}<div class="j-tip">${loc.name}</div></div>`;
-            if(i < locations.length-1) html += `<div class="j-line"><div class="j-line-fill" id="jfill-${i}" style="width:0%;"></div></div>`;
+        const el=document.getElementById('jStops');
+        let h='';
+        L_.forEach((loc,i)=>{
+            h+=`<div class="j-dot" id="jdot-${i}" style="background:${zC[loc.zone]};" onclick="openInfo(${i})">${loc.num}<div class="j-tip">${loc.name}</div></div>`;
+            if(i<L_.length-1) h+=`<div class="j-line"><div class="j-line-fill" id="jfill-${i}" style="width:0%;"></div></div>`;
         });
-        bar.innerHTML = html;
+        el.innerHTML=h;
     }
     buildJourneyBar();
 
     function updateJourneyDots(idx){
-        document.querySelectorAll('.j-dot').forEach((d,i)=>{
-            d.classList.toggle('active',i===idx);
-        });
-        // Fill lines up to idx
-        for(let i=0;i<locations.length-1;i++){
-            const fill = document.getElementById('jfill-'+i);
-            if(fill) fill.style.width = i < idx ? '100%' : '0%';
-        }
+        document.querySelectorAll('.j-dot').forEach((d,i)=>d.classList.toggle('active',i===idx));
+        for(let i=0;i<L_.length-1;i++){const f=document.getElementById('jfill-'+i);if(f)f.style.width=i<idx?'100%':'0%';}
     }
 
     // ════════════════════════════════════════════
     // JOURNEY PLAYBACK
     // ════════════════════════════════════════════
-    let journeyPlaying = false;
-    let journeyTimer = null;
-    let journeyIdx = 0;
-
-    function toggleJourney(){
-        if(journeyPlaying){
-            stopJourney();
-        } else {
-            startJourney();
-        }
-    }
-
-    function startJourney(){
-        journeyPlaying = true;
-        journeyIdx = 0;
-        const btn = document.getElementById('playBtn');
-        btn.classList.add('playing');
-        document.getElementById('playIcon').textContent = '⏸';
-        document.getElementById('playText').textContent = 'إيقاف الرحلة';
+    let jPlaying=false,jTimer=null,jIdx=0;
+    function toggleJourney(){jPlaying?stopJ():startJ();}
+    function startJ(){
+        jPlaying=true;jIdx=0;
+        document.getElementById('playBtn').classList.add('playing');
+        document.getElementById('playIcon').textContent='⏸';
+        document.getElementById('playText').textContent='إيقاف';
         playStep();
     }
-
-    function stopJourney(){
-        journeyPlaying = false;
-        clearTimeout(journeyTimer);
-        const btn = document.getElementById('playBtn');
-        btn.classList.remove('playing');
-        document.getElementById('playIcon').textContent = '▶';
-        document.getElementById('playText').textContent = 'تشغيل الرحلة';
+    function stopJ(){
+        jPlaying=false;clearTimeout(jTimer);
+        document.getElementById('playBtn').classList.remove('playing');
+        document.getElementById('playIcon').textContent='▶';
+        document.getElementById('playText').textContent='تشغيل الرحلة';
     }
-
     function playStep(){
-        if(!journeyPlaying || journeyIdx >= locations.length){
-            stopJourney();
-            return;
-        }
-        openInfo(journeyIdx);
-        journeyIdx++;
-        journeyTimer = setTimeout(playStep, 4000);
+        if(!jPlaying||jIdx>=L_.length){stopJ();return;}
+        openInfo(jIdx);jIdx++;jTimer=setTimeout(playStep,4500);
     }
-
-    // ════════════════════════════════════════════
-    // UTILITIES
-    // ════════════════════════════════════════════
-    function resetView(){
-        closeInfo();
-        stopJourney();
-        map.fitBounds(bounds.pad(0.08),{duration:1});
-        updateJourneyDots(-1);
-    }//
-
+    function resetView(){closeInfo();stopJ();map.fitBounds(bounds.pad(0.08),{duration:1});updateJourneyDots(-1);}
     function toggleLegend(){
-        const panel = document.getElementById('legendPanel');
-        const toggle = document.getElementById('legToggle');
-        panel.classList.toggle('collapsed');
-        toggle.textContent = panel.classList.contains('collapsed') ? '▲' : '▼';
+        const p=document.getElementById('legendPanel'),t=document.getElementById('legToggle');
+        p.classList.toggle('collapsed');t.textContent=p.classList.contains('collapsed')?'▲':'▼';
     }
 </script>
 </body>
