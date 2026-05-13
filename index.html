@@ -26,6 +26,40 @@
         .leaflet-control-container .leaflet-top,.leaflet-control-container .leaflet-bottom{display:none!important;}
         .leaflet-tile-pane{filter:saturate(0.5) brightness(1.08) contrast(0.88);}
 
+
+        /* ══ SITE NAV DROPDOWN ══ */
+        .topbar-home-link{display:flex;align-items:center;}
+        .btn-site{background:var(--brand)!important;color:#fff!important;font-size:11px!important;padding:6px 14px!important;}
+        .btn-site:hover{background:var(--primary)!important;}
+        .topbar-nav-wrap{position:relative;}
+        .site-nav{
+            position:absolute;top:calc(100% + 8px);left:0;min-width:220px;
+            background:#fff;border:1px solid var(--glass-border);border-radius:var(--r);
+            box-shadow:0 16px 48px rgba(0,0,0,0.12);padding:8px;
+            opacity:0;visibility:hidden;transform:translateY(-6px);
+            transition:all 0.25s ease;z-index:2000;
+        }
+        .site-nav.open{opacity:1;visibility:visible;transform:translateY(0);}
+        .site-nav a{
+            display:block;padding:10px 14px;font-size:13px;font-weight:600;
+            color:var(--dark);border-radius:8px;text-decoration:none;
+            transition:background 0.2s,color 0.2s;
+        }
+        .site-nav a:hover{background:var(--sand);color:var(--brand);}
+        .site-nav a:first-child{color:var(--brand);font-weight:700;}
+        /* ══ AREA LINK IN INFO PANEL ══ */
+        .info-area-link{
+            display:block;margin-top:12px;padding:12px;border-radius:8px;
+            background:var(--brand);color:#fff;text-align:center;
+            font-size:13px;font-weight:700;text-decoration:none;
+            transition:background 0.2s;
+        }
+        .info-area-link:hover{background:var(--primary);}
+        @media(max-width:480px){
+            .btn-site{font-size:10px!important;padding:5px 10px!important;}
+            .site-nav{min-width:200px;left:auto;right:0;}
+        }
+
         /* ══ TOP BAR ══ */
         .topbar{
             position:fixed;top:0;right:0;left:0;z-index:1000;
@@ -183,7 +217,7 @@
 <!-- ══ TOP BAR ══ -->
 <div class="topbar">
     <div class="topbar-right">
-        <img src="https://i.ibb.co/Y7kgwmgn/Yaqoot-Logo.png" alt="ياقوت" class="topbar-logo">
+        <a href="https://yaqooti.sa/ar/home/" class="topbar-home-link" title="العودة للموقع"><img src="https://yaqooti.sa/wp-content/uploads/2026/04/Yaqoot-Logo.png" alt="ياقوت" class="topbar-logo"></a>
         <div>
             <div class="topbar-title">خريطة ياقوت الاستثمارية</div>
             <div class="topbar-sub">ممر نمو غرب الرياض · من الإرث إلى الفرصة</div>
@@ -246,7 +280,7 @@
             dist:'من الرياض: 20 كم · إلى القدية: 38 كم',zoneName:'التراث',zoneIcon:'🏛'
         },
         {
-            id:2,num:'02',name:'العمارية',en:'Al Ammariyah',zone:'h',key:false,ldir:'top',
+            id:2,num:'02',pageUrl:'https://yaqooti.sa/investment-areas/al-amariya/',name:'العمارية',en:'Al Ammariyah',zone:'h',key:false,ldir:'top',
             lat:24.7954674,lng:46.4272917,elev:'700م',
             img:'https://www.naboo.app/_next/image?url=https%3A%2F%2Fwome-houses-prod.s3.eu-west-3.amazonaws.com%2FapbD1761124943196.png&w=828&q=75',
             sections:[
@@ -286,7 +320,7 @@
             dist:'إلى القدية: 12 كم',zoneName:'التحول',zoneIcon:'🏰'
         },
         {
-            id:6,num:'06',name:'مدينة القدية الترفيهية',en:'Qiddiya City',zone:'t',key:true,ldir:'top',
+            id:6,num:'06',pageUrl:'https://yaqooti.sa/investment-areas/qiddiya/',name:'مدينة القدية الترفيهية',en:'Qiddiya City',zone:'t',key:true,ldir:'top',
             lat:24.5700893,lng:46.3100113,elev:'600م',
             img:'https://upload.wikimedia.org/wikipedia/commons/2/21/Qiddiya_Illustration.png',
             sections:[
@@ -302,7 +336,7 @@
             dist:'40 كم من الرياض · خط المترو 7 مخطط 2026',zoneName:'التحول',zoneIcon:'🎢'
         },
         {
-            id:7,num:'07',name:'ضرماء',en:'Dhurma',zone:'e',key:false,ldir:'topright',
+            id:7,num:'07',pageUrl:'https://yaqooti.sa/investment-areas/dhurma/',name:'ضرماء',en:'Dhurma',zone:'e',key:false,ldir:'topright',
             lat:24.5998333,lng:46.1345278,elev:'650م',
             img:'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2a/b9/25/44/caption.jpg?w=400&h=300&s=1',
             sections:[
@@ -315,7 +349,7 @@
             dist:'من الرياض: 65 كم',zoneName:'التوسع',zoneIcon:'🌿'
         },
         {
-            id:8,num:'08',name:'المزاحمية',en:'Al Muzahimiyah',zone:'e',key:false,ldir:'botright',
+            id:8,num:'08',pageUrl:'https://yaqooti.sa/investment-areas/al-mizahmiya/',name:'المزاحمية',en:'Al Muzahimiyah',zone:'e',key:false,ldir:'botright',
             lat:24.4725109,lng:46.2877854,elev:'640م',
             img:'https://upload.wikimedia.org/wikipedia/commons/c/c1/The_Main_Street_in_Al-Muzahimiyah_%28HDR%29_%283312344154%29.jpg',
             sections:[
@@ -360,7 +394,7 @@
             dist:'إلى الجلة: 12 كم',zoneName:'الفرص',zoneIcon:'🛣'
         },
         {
-            id:13,num:'13',name:'مخططات العارضية',en:'Al Aridhiyah (Um Al-Khair)',zone:'o',key:false,ldir:'right',
+            id:13,num:'13',pageUrl:'https://yaqooti.sa/investment-areas/al-aridhiyah/',name:'مخططات العارضية',en:'Al Aridhiyah (Um Al-Khair)',zone:'o',key:false,ldir:'right',
             lat:24.6207778,lng:46.1773611,elev:'615م',
             img:'https://i.ibb.co/BVtVzjsg/Al-Ardiyah.png',
             sections:[
@@ -372,7 +406,7 @@
             dist:'وصول طريق سريع',zoneName:'الفرص',zoneIcon:'💰'
         },
         {
-            id:14,num:'14',name:'الجلة',en:'Al Jella — Final Destination',zone:'o',key:true,ldir:'botright',
+            id:14,num:'14',pageUrl:'https://yaqooti.sa/investment-areas/al-jella/',name:'الجلة',en:'Al Jella — Final Destination',zone:'o',key:true,ldir:'botright',
             lat:24.3467778,lng:45.8338056,elev:'585م',
             img:'https://i.ibb.co/pjJC6yCM/Al-Jella.png',
             sections:[
@@ -385,7 +419,7 @@
             dist:'~80 كم من الرياض',zoneName:'الفرص',zoneIcon:'🏁'
         },
         {
-            id:15,num:'15',name:'مخططات الجلة',en:'Al Jella Plans',zone:'o',key:false,ldir:'left',
+            id:15,num:'15',pageUrl:'https://yaqooti.sa/investment-areas/al-jella/',name:'مخططات الجلة',en:'Al Jella Plans',zone:'o',key:false,ldir:'left',
             lat:24.49525,lng:45.7273889,elev:'580م',
             img:'https://i.ibb.co/VYmwcM6g/plan-521.png',
             sections:[{title:'الفكرة',icon:'📋',type:'text',text:'تخطيط الأراضي ومناطق البيع. المخططات المتاحة للاستثمار في الجلة.'}],
@@ -396,7 +430,7 @@
 
     // Dirab data (separate - not part of main corridor)
     const dirabData = {
-        name:'محور ديراب',en:'Derab Axis',
+        pageUrl:'https://yaqooti.sa/investment-areas/dirab/',name:'محور ديراب',en:'Derab Axis',
         sections:[
             {title:'الموقع',icon:'📍',type:'text',text:'جنوب غرب الرياض.'},
             {title:'المعالم',icon:'🐎',type:'bullets',items:['مركز الملك عبدالعزيز للخيل العربية الأصيلة','تسجيل السلالات','أنشطة الفروسية']},
@@ -522,6 +556,7 @@
         h+=`<div style="font-size:11px;color:#aaa;margin-top:8px;">${loc.dist}</div>`;
         h+=`<div style="font-size:10px;color:#ccc;margin-top:3px;">الارتفاع: ${loc.elev}</div>`;
         h+=`</div>`;
+        if(loc.pageUrl) h+=`<a class="info-area-link" href="${loc.pageUrl}" target="_top">📄 عرض تفاصيل المنطقة على الموقع</a>`;
         h+=`<div class="info-nav">`;
         if(idx>0) h+=`<button class="info-nav-btn" onclick="openInfo(${idx-1})">→ ${L_[idx-1].name}</button>`;
         if(idx<L_.length-1) h+=`<button class="info-nav-btn" onclick="openInfo(${idx+1})">${L_[idx+1].name} ←</button>`;
@@ -600,6 +635,14 @@
         if(!jPlaying||jIdx>=L_.length){stopJ();return;}
         openInfo(jIdx);jIdx++;jTimer=setTimeout(playStep,4500);
     }
+    function toggleSiteNav(){
+        document.getElementById('siteNav').classList.toggle('open');
+    }
+    document.addEventListener('click',function(e){
+        var nav=document.getElementById('siteNav');
+        if(nav && !e.target.closest('.topbar-nav-wrap')) nav.classList.remove('open');
+    });
+
     function resetView(){closeInfo();stopJ();map.fitBounds(bounds.pad(0.08),{duration:1});updateJourneyDots(-1);}
     function toggleLegend(){
         const p=document.getElementById('legendPanel'),t=document.getElementById('legToggle');
